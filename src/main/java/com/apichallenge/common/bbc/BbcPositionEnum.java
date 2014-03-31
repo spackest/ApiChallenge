@@ -4,7 +4,7 @@ import com.apichallenge.common.model.*;
 
 import java.util.*;
 
-public enum BbcPositionEnum implements PositionInterface {
+public enum BbcPositionEnum {
 	CATCHER(1, "C", "Catcher"),
 	FIRST_BASE(2, "1B", "First Base"),
 	SECOND_BASE(3, "2B", "Second Base"),

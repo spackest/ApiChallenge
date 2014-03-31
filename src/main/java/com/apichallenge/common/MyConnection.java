@@ -26,7 +26,6 @@ public class MyConnection {
 
 	public Connection.Response get(String url, Map<String, String> form) throws IOException {
 		Connection.Response thisResponse = request(Connection.Method.GET, url, form);
-		thisResponse.toString();
 		return thisResponse;
 	}
 
@@ -40,7 +39,7 @@ public class MyConnection {
 		}
 
 		if (cookies != null && cookies.size() > 0) {
-			connection.cookies(cookies);
+			connection = connection.cookies(cookies);
 		}
 
 		if (form != null) {
@@ -49,7 +48,11 @@ public class MyConnection {
 
 		response = connection.url(url).method(method).execute();
 
-		cookies = response.cookies();
+		Map<String, String> theseCookies = response.cookies();
+
+		if (theseCookies != null && theseCookies.size() > 0) {
+			cookies = response.cookies();
+		}
 
 		return response;
 	}

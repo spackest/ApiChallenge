@@ -5,14 +5,14 @@ import com.apichallenge.common.bbc.*;
 public class Player {
 	private int id;
 	private String name;
-	private BbcTeam team;
-	private BbcTeam opponent;
-	private BbcTeam location;
+	private Team team;
+	private Team opponent;
+	private Team homeTeam;
 	private int rank;
 	private float average;
 	private int points;
 
-	public Player(int id, String name, BbcTeam team, String rawOpponentShortName, int rank, float average, int points) {
+	public Player(int id, String name, Team team, String rawOpponentShortName, int rank, float average, int points) {
 		this.id = id;
 		this.name = name;
 		this.rank = rank;
@@ -20,8 +20,8 @@ public class Player {
 		this.points = points;
 
 		this.team = team;
-		opponent = BbcTeam.getTeamByShortName(rawOpponentShortName.replace("@", ""));
-		location = (rawOpponentShortName.startsWith("@")) ? opponent : team;
+		opponent = BbcTeam.getTeam(rawOpponentShortName.replace("@", ""));
+		homeTeam = (rawOpponentShortName.startsWith("@")) ? opponent : team;
 	}
 
 	public int getId() {
@@ -32,16 +32,16 @@ public class Player {
 		return name;
 	}
 
-	public BbcTeam getTeam() {
+	public Team getTeam() {
 		return team;
 	}
 
-	public BbcTeam getOpponent() {
+	public Team getOpponent() {
 		return opponent;
 	}
 
-	public BbcTeam getLocation() {
-		return location;
+	public Team getHomeTeam() {
+		return homeTeam;
 	}
 
 	public int getRank() {

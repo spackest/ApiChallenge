@@ -78,4 +78,9 @@ public final class EspnUtil {
 
 		return espnEntry;
 	}
+
+	public static void getBoxScores(int year) {
+
+
+	}
 }
