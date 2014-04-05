@@ -54,10 +54,26 @@ public class SimpleHttpCache {
 	}
 
 	public static String getHtmlFromUrl(String url) {
+		return getHtmlFromUrl(url, false);
+	}
+
+	public static void wipeCache(String url) {
+		File file = new File(url2Filename(url));
+
+		if (file.exists()) {
+			file.delete();
+		}
+	}
+
+	public static String getHtmlFromUrl(String url, boolean fresh) {
 		String filename = url2Filename(url);
 		File file = new File(filename);
 
 		String html = null;
+
+		if (file.exists() && fresh) {
+			file.delete();
+		}
 
 		if (file.exists()) {
 			try {

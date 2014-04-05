@@ -1,5 +1,7 @@
 package com.apichallenge.common;
 
+import com.apichallenge.common.espn.*;
+import org.apache.commons.logging.*;
 import org.jsoup.*;
 
 import java.io.*;
@@ -12,6 +14,7 @@ public class MyConnection {
 	private List<EspnEntry> espnEntries;
 	private int spid;
 
+	private static final Log LOG = LogFactory.getLog(MyConnection.class);
 
 	public MyConnection() {
 	}
@@ -46,7 +49,20 @@ public class MyConnection {
 			connection = connection.data(form);
 		}
 
-		response = connection.url(url).method(method).execute();
+		connection.followRedirects(true);
+
+		for (int i = 1; i <= 3; i++) {
+			try {
+				response = connection.url(url).method(method).execute();
+				break;
+			} catch (Exception e) {
+				LOG.debug("trying to " + method + " " + url + " again");
+				try {
+					Thread.sleep(1000);
+				} catch (InterruptedException e1) {
+				}
+			}
+		}
 
 		Map<String, String> theseCookies = response.cookies();
 
