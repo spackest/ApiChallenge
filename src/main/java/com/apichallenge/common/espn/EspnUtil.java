@@ -1,7 +1,6 @@
 package com.apichallenge.common.espn;
 
 import com.apichallenge.common.*;
-import com.apichallenge.common.espn.*;
 import org.jsoup.*;
 import org.jsoup.nodes.*;
 
@@ -56,33 +55,5 @@ public final class EspnUtil {
 		myConnection.setEspnEntries(espnEntries);
 
 		return myConnection;
-	}
-
-	public static EspnEntry getEspnEntry(MyConnection myConnection, String entryName) {
-		List<EspnEntry> espnEntries = myConnection.getEspnEntries();
-
-		if (espnEntries == null || espnEntries.size() == 0) {
-			throw new IllegalArgumentException("no entries found :(");
-		}
-
-		EspnEntry espnEntry = null;
-
-		for (EspnEntry thisEspnEntry : espnEntries) {
-			if (thisEspnEntry.getName().equals(entryName)) {
-				espnEntry = thisEspnEntry;
-				break;
-			}
-		}
-
-		if (espnEntry == null) {
-			throw new IllegalArgumentException("no espnEntry for " + entryName);
-		}
-
-		return espnEntry;
-	}
-
-	public static void getBoxScores(int year) {
-
-
 	}
 }

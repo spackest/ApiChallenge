@@ -1,60 +1,65 @@
 package com.apichallenge.common.espn.bbc.service;
 
-import com.apichallenge.common.espn.bbc.entity.*;
+import com.apichallenge.common.espn.bbc.*;
 import org.springframework.stereotype.*;
 
 @Service
 public class BbcPlayerDay {
-	private BbcPlayer bbcPlayer;
-	private BbcTeam team;
-	private BbcTeam opponent;
+	private EspnId espnId;
+	private BbcId bbcId;
+	private long teamId;
+	private Long opponentId;
 	private boolean homeGame;
-	private double average;
+	private float average;
 	private int points;
+	private BbcPlayerDay startingPitcher;
 
 	public BbcPlayerDay() {
 	}
 
-	public BbcPlayerDay(BbcPlayer bbcPlayer, BbcTeam team, BbcTeam opponent, boolean homeGame, double average, int points) {
-		this.bbcPlayer = bbcPlayer;
-		this.team = team;
-		this.opponent = opponent;
+	public BbcPlayerDay(EspnId espnId, BbcId bbcId, long teamId, Long opponentId, boolean homeGame, float average, int points) {
+		this.espnId = espnId;
+		this.bbcId = bbcId;
+		this.teamId = teamId;
+		this.opponentId = opponentId;
 		this.homeGame = homeGame;
 		this.average = average;
 		this.points = points;
 	}
 
-	public BbcPlayer getBbcPlayer() {
-		return bbcPlayer;
+	public BbcPlayerDay getStartingPitcher() {
+		return startingPitcher;
 	}
 
-	public BbcTeam getTeam() {
-		return team;
+	public void setStartingPitcher(BbcPlayerDay startingPitcher) {
+		this.startingPitcher = startingPitcher;
 	}
 
-	public BbcTeam getOpponent() {
-		return opponent;
+	public EspnId getEspnId() {
+		return espnId;
+	}
+
+	public BbcId getBbcId() {
+		return bbcId;
+	}
+
+	public long getTeamId() {
+		return teamId;
+	}
+
+	public long getOpponentId() {
+		return opponentId;
 	}
 
 	public boolean isHomeGame() {
 		return homeGame;
 	}
 
-	public double getAverage() {
+	public float getAverage() {
 		return average;
 	}
 
 	public int getPoints() {
 		return points;
-	}
-
-	@Override
-	public String toString() {
-		return bbcPlayer.getName() +
-			", team=" + team.getShortName() +
-			", opponent=" + (opponent == null ? null : opponent.getShortName()) +
-			", homeGame=" + homeGame +
-			", average=" + average +
-			", points=" + points;
 	}
 }

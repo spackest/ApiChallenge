@@ -6,5 +6,11 @@ import org.springframework.stereotype.*;
 
 @Repository
 public interface BbcPlayerRepository extends JpaRepository<BbcPlayer, Long> {
+	@Query("SELECT COUNT(b) FROM BbcPlayer b")
+	public Integer getPlayerCount();
+
 	BbcPlayer getBbcPlayerByEspnId(int espnId);
+
+	@Query("SELECT b.slotId FROM BbcPlayer b WHERE b.espnId = ?1")
+	Integer getSlotIdByEspnId(int espnId);
 }

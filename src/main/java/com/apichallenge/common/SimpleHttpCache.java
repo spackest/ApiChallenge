@@ -31,6 +31,8 @@ public class SimpleHttpCache {
 	}
 
 	private static String getHtmlProper(String url) {
+		System.out.println("going after " + url);
+
 		HttpClient httpclient = HttpClientBuilder.create().build();
 		HttpGet httpGet = new HttpGet(url);
 

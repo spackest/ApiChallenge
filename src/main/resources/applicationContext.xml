@@ -10,7 +10,9 @@
 
 	<context:annotation-config/>
 
+	<context:component-scan base-package="com.apichallenge.common.espn.bbc.game"/>
 	<context:component-scan base-package="com.apichallenge.common.espn.bbc.service"/>
+	<context:component-scan base-package="com.apichallenge.common.espn.bbc.strategy"/>
 
 	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
 		<property name="entityManagerFactory" ref="entityManagerFactory"/>

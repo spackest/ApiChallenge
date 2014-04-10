@@ -1,15 +1,20 @@
 package com.apichallenge.common.espn.bbc.entity;
 
+import com.apichallenge.common.espn.bbc.*;
+
 import javax.persistence.*;
 
 @Entity
 @Table(name = "BBC_PLAYER", uniqueConstraints = {@UniqueConstraint(columnNames = {"ESPN_ID"})})
 public class BbcPlayer extends ParentEntity<BbcPlayer> {
-	@Column(name = "ESPN_ID", nullable = false)
-	private int espnId;
+	@Column(name = "BBC_ID", nullable = true)
+	private Integer bbcId;
 
-	@Column(name = "SLOT_ID", nullable = false)
-	private int slotId;
+	@Column(name = "ESPN_ID", nullable = false)
+	private Integer espnId;
+
+	@Column(name = "SLOT_ID", nullable = true)
+	private Integer slotId;
 
 	@Column(name = "TEAM_ID", nullable = false)
 	private long teamId;
@@ -20,18 +25,31 @@ public class BbcPlayer extends ParentEntity<BbcPlayer> {
 	public BbcPlayer() {
 	}
 
-	public BbcPlayer(int espnId, int slotId, long teamId, String name) {
-		this.espnId = espnId;
+	public BbcPlayer(BbcId bbcId, EspnId espnId, Integer slotId, long teamId, String name) {
+		this.bbcId = (bbcId == null) ? null : bbcId.getId();
+		this.espnId = espnId.getId();
 		this.slotId = slotId;
 		this.teamId = teamId;
 		this.name = name;
 	}
 
-	public int getEspnId() {
-		return espnId;
+	public void setBbcId(BbcId bbcId) {
+		this.bbcId = bbcId.getId();
 	}
 
-	public int getSlotId() {
+	public BbcId getBbcId() {
+		return new BbcId(bbcId);
+	}
+
+	public EspnId getEspnId() {
+		return new EspnId(espnId);
+	}
+
+	public void setSlotId(Integer slotId) {
+		this.slotId = slotId;
+	}
+
+	public Integer getSlotId() {
 		return slotId;
 	}
 

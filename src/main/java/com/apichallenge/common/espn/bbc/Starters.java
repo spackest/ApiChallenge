@@ -24,6 +24,10 @@ public class Starters {
 		return starters.get(bbcPositionEnum);
 	}
 
+	public Collection<BbcPlayer> getStarters() {
+		return starters.values();
+	}
+
 	public boolean equals(Object object) {
 		Starters startersObject = (Starters) object;
 		if (startersObject == null) {
@@ -37,9 +41,9 @@ public class Starters {
 		}
 
 		for (Map.Entry<BbcPositionEnum, BbcPlayer> entryA : starters.entrySet()) {
-			BbcPlayer bbcPlayerA = entryA.getValue();
-			BbcPlayer bbcPlayerB = startersObject.getStarter(entryA.getKey());
-			if (!bbcPlayerA.equals(bbcPlayerB)) {
+			int espnIdA = entryA.getValue().getEspnId().getId();
+			int espnIdB = startersObject.getStarter(entryA.getKey()).getEspnId().getId();
+			if (espnIdA != espnIdB) {
 				return false;
 			}
 		}

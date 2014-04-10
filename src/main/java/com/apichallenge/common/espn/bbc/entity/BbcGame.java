@@ -12,11 +12,20 @@ public class BbcGame extends ParentEntity<BbcGame> {
 	@Column(name = "DATE", nullable = false)
 	private Date date;
 
+	@Column(name = "YEAR", nullable = false)
+	private int year;
+
 	@Column(name = "HOME_TEAM_ID", nullable = false)
 	private long homeTeamId;
 
+	@Column(name = "HOME_STARTING_PITCHER_ESPN_ID", nullable = true)
+	private Integer homeStartingPitcherEspnId;
+
 	@Column(name = "AWAY_TEAM_ID", nullable = false)
 	private long awayTeamId;
+
+	@Column(name = "AWAY_STARTING_PITCHER_ESPN_ID", nullable = true)
+	private Integer awayStartingPitcherEspnId;
 
 	@Column(name = "GAME_NUMBER", nullable = false)
 	private int gameNumber;
@@ -30,9 +39,38 @@ public class BbcGame extends ParentEntity<BbcGame> {
 		this.homeTeamId = homeTeam.getId();
 		this.awayTeamId = awayTeam.getId();
 		this.gameNumber = gameNumber;
+		Calendar calendar = Calendar.getInstance();
+		calendar.setTime(date);
+		year = calendar.get(Calendar.YEAR);
 	}
 
 	public void setEspnGameId(Integer espnGameId) {
 		this.espnGameId = espnGameId;
+	}
+
+	public Integer getEspnGameId() {
+		return espnGameId;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public long getHomeTeamId() {
+
+
+		return homeTeamId;
+	}
+
+	public long getAwayTeamId() {
+		return awayTeamId;
+	}
+
+	public void setHomeStartingPitcherEspnId(Integer homeStartingPitcherEspnId) {
+		this.homeStartingPitcherEspnId = homeStartingPitcherEspnId;
+	}
+
+	public void setAwayStartingPitcherEspnId(Integer awayStartingPitcherEspnId) {
+		this.awayStartingPitcherEspnId = awayStartingPitcherEspnId;
 	}
 }
