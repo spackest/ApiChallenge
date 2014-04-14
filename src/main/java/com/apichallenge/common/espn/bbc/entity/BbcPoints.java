@@ -21,7 +21,7 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 	private Date date;
 
 	@Column(name = "ESPN_GAME_ID", nullable = false)
-	private int espnGameId;
+	private Integer espnGameId;
 
 	@Column(name = "TEAM_ID", nullable = false)
 	private long teamId;
@@ -34,6 +34,9 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 
 	@Column(name = "ESPN_ID", nullable = false)
 	private int espnId;
+
+	@Column(name = "SLOT_ID", nullable = true)
+	private Integer slotId;
 
 	@Column(name = "INCOMING_GAMES", nullable = true)
 	private Integer incomingGames;
@@ -50,14 +53,24 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 	public BbcPoints() {
 	}
 
-	public BbcPoints(Date date, int espnGameId, long teamId, long opponentId, boolean homeGame, EspnId espnId, Integer points) {
-		this.date = date;
-		year = DateUtil.getYear(date);
-		this.espnGameId = espnGameId;
+	public BbcPoints(Date date, long teamId, long opponentId, boolean homeGame, EspnId espnId, Integer slotId) {
 		this.teamId = teamId;
 		this.opponentId = opponentId;
 		this.homeGame = homeGame;
 		this.espnId = espnId.getId();
+		this.slotId = slotId;
+	}
+
+
+	public BbcPoints(Date date, EspnGameId espnGameId, long teamId, long opponentId, boolean homeGame, EspnId espnId, SlotId slotId, Integer points) {
+		this.date = date;
+		year = DateUtil.getYear(date);
+		this.espnGameId = espnGameId.getId();
+		this.teamId = teamId;
+		this.opponentId = opponentId;
+		this.homeGame = homeGame;
+		this.espnId = espnId.getId();
+		this.slotId = slotId.getId();
 		this.points = points;
 		incomingTotalPoints = null;
 		incomingAveragePoints = null;
@@ -79,8 +92,48 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 		return points;
 	}
 
-	public int getEspnId() {
-		return espnId;
+	public EspnId getEspnId() {
+		return new EspnId(espnId);
+	}
+
+	public Integer getIncomingTotalPoints() {
+		return incomingTotalPoints;
+	}
+
+	public Float getIncomingAveragePoints() {
+		return incomingAveragePoints;
+	}
+
+	public long getTeamId() {
+		return teamId;
+	}
+
+	public long getOpponentId() {
+		return opponentId;
+	}
+
+	public int getYear() {
+		return year;
+	}
+
+	public Date getDate() {
+		return date;
+	}
+
+	public EspnGameId getEspnGameId() {
+		return espnGameId == null ? null : new EspnGameId(espnGameId);
+	}
+
+	public boolean isHomeGame() {
+		return homeGame;
+	}
+
+	public SlotId getSlotId() {
+		return slotId == null ? null : new SlotId(slotId);
+	}
+
+	public Integer getIncomingGames() {
+		return incomingGames;
 	}
 
 	@Override

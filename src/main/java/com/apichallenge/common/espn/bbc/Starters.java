@@ -40,14 +40,39 @@ public class Starters {
 			return false;
 		}
 
+		int matches = 0;
+
 		for (Map.Entry<BbcPositionEnum, BbcPlayer> entryA : starters.entrySet()) {
-			int espnIdA = entryA.getValue().getEspnId().getId();
-			int espnIdB = startersObject.getStarter(entryA.getKey()).getEspnId().getId();
-			if (espnIdA != espnIdB) {
-				return false;
+			BbcPositionEnum bbcPositionEnum = entryA.getKey();
+			BbcPlayer bbcPlayerA = entryA.getValue();
+			BbcPlayer bbcPlayerB = startersObject.getStarter(entryA.getKey());
+
+			if (bbcPositionEnum.getSlotId() == BbcPositionEnum.PITCHING_STAFF.getSlotId()) {
+				if (bbcPlayerA.getTeamId() == bbcPlayerB.getTeamId()) {
+					matches++;
+				}
+			} else {
+				if (bbcPlayerA.getEspnId().getId().equals(bbcPlayerB.getEspnId().getId())) {
+					matches++;
+				} else {
+					return false;
+				}
 			}
 		}
 
-		return true;
+		return matches == starters.entrySet().size();
+	}
+
+	@Override
+	public String toString() {
+		String toString = "";
+
+		for (int slotId = 1; slotId <= 10; slotId++) {
+			BbcPositionEnum bbcPositionEnum = BbcPositionEnum.getBbcPositionBySlotId(new SlotId(slotId));
+			toString += slotId + ":" + bbcPositionEnum.getName() + " -> " + starters.get(bbcPositionEnum).getName() + "; ";
+		}
+
+		toString = toString.replaceAll("; $", "");
+		return toString;
 	}
 }

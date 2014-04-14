@@ -6,7 +6,6 @@ import com.apichallenge.common.espn.bbc.enums.*;
 import com.apichallenge.common.espn.bbc.repository.*;
 import com.apichallenge.common.espn.bbc.service.*;
 import org.apache.commons.logging.*;
-import org.hibernate.*;
 import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
 
@@ -20,6 +19,9 @@ public class DbFantasyGame extends FantasyGame {
 
 	@Autowired
 	BbcTeamRepository bbcTeamRepository;
+
+	@Autowired
+	BbcGameRepository bbcGameRepository;
 
 	@Autowired
 	BbcPlayerRepository bbcPlayerRepository;
@@ -36,43 +38,49 @@ public class DbFantasyGame extends FantasyGame {
 	}
 
 	@Override
-	public BbcLeague getLeague(Date date, boolean getFullLeague) {
+	public BbcLeague getLeague(Date date) {
 		long start = System.currentTimeMillis();
 
 		System.out.println("getting league for " + date);
-		EntityManager entityManager = entityManagerFactory.createEntityManager();
 
 		BbcLeague bbcLeague = new BbcLeague();
-		Map<Integer, List<BbcPlayerDay>> map = new HashMap<Integer, List<BbcPlayerDay>>();
+		Map<SlotId, Map<BbcPlayerDay, List<BbcGame>>> bigMap = new HashMap<SlotId, Map<BbcPlayerDay, List<BbcGame>>>();
 
-		SQLQuery sqlQuery = entityManager.unwrap(Session.class).createSQLQuery("select slot_id, bbc_player.espn_id, bbc_player.bbc_id, bbc_points.team_id, bbc_points.opponent_id, bbc_points.home_game, bbc_points.incoming_total_points, bbc_points.incoming_average_points from bbc_player, bbc_game, bbc_points where bbc_points.date = :date and (bbc_game.away_team_id = bbc_player.team_id or bbc_game.home_team_id = bbc_player.team_id) and bbc_player.espn_id = bbc_points.espn_id and bbc_game.espn_game_id is not null AND bbc_game.espn_game_id = bbc_points.espn_game_id AND bbc_id IS NOT NULL AND slot_id IS NOT NULL order by slot_id");
-		sqlQuery.setDate("date", date);
-		for (Object rawObject : sqlQuery.list()) {
-			Object[] objects = (Object[]) rawObject;
-			Integer slotId = Integer.valueOf(objects[0].toString());
-			EspnId espnId = new EspnId(Integer.valueOf(objects[1].toString()));
-			BbcId bbcId = new BbcId(Integer.valueOf(objects[2].toString()));
-			long teamId = Long.valueOf(objects[3].toString());
-			Long opponentId = Long.valueOf(objects[4].toString());
-			boolean homeGame = Boolean.valueOf(objects[5].toString());
-			int points = Integer.valueOf(objects[6].toString());
-			float average = Float.valueOf(objects[7].toString());
+		for (BbcPoints bbcPoints : bbcPointsRepository.getPointsFromDate(date)) {
+			SlotId slotId = bbcPoints.getSlotId();
 
-			List<BbcGame> bbcGames = new ArrayList<BbcGame>();
+			if (slotId == null || slotId.getId().equals(0)) {
+				continue;
+			}
 
-			BbcPlayerDay bbcPlayerDay = new BbcPlayerDay(espnId, bbcId, teamId, opponentId, homeGame, average, points);
+			BbcTeam team = bbcTeamRepository.findOne(bbcPoints.getTeamId());
+			BbcTeam opponent = bbcTeamRepository.findOne(bbcPoints.getOpponentId());
 
-			List<BbcPlayerDay> myList = map.containsKey(slotId) ? map.get(slotId) : new ArrayList<BbcPlayerDay>();
-			myList.add(bbcPlayerDay);
+			BbcPlayerDay bbcPlayerDay = new BbcPlayerDay(bbcPoints.getEspnId(), null, false, team, opponent, bbcPoints.isHomeGame(), bbcPoints.getIncomingAveragePoints(), bbcPoints.getIncomingTotalPoints());
 
-			// yip, keep putting it back
-			map.put(slotId, myList);
+			Map<BbcPlayerDay, List<BbcGame>> slotMap;
+			if (bigMap.containsKey(slotId)) {
+				slotMap = bigMap.get(slotId);
+			} else {
+				slotMap = new HashMap<BbcPlayerDay, List<BbcGame>>();
+				bigMap.put(slotId, slotMap);
+			}
+
+			long homeTeamId;
+			long awayTeamId;
+
+			if (bbcPoints.isHomeGame()) {
+				homeTeamId = bbcPoints.getTeamId();
+				awayTeamId = bbcPoints.getOpponentId();
+			} else {
+				homeTeamId = bbcPoints.getOpponentId();
+				awayTeamId = bbcPoints.getTeamId();
+			}
+
+			slotMap.put(bbcPlayerDay, bbcGameRepository.getBbcGames(date, homeTeamId, awayTeamId));
 		}
 
-		entityManager.clear();
-		entityManager.close();
-
-		for (Map.Entry<Integer, List<BbcPlayerDay>> entry : map.entrySet()) {
+		for (Map.Entry<SlotId, Map<BbcPlayerDay, List<BbcGame>>> entry : bigMap.entrySet()) {
 			LeagueSlot leagueSlot = new LeagueSlot(BbcPositionEnum.getBbcPositionBySlotId(entry.getKey()), entry.getValue());
 			bbcLeague.addLeagueSlot(leagueSlot);
 		}

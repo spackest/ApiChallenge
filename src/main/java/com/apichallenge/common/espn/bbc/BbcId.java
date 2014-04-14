@@ -10,4 +10,11 @@ public class BbcId {
 	public Integer getId() {
 		return bbcId;
 	}
+
+	@Override
+	public String toString() {
+		return "BbcId{" +
+			"bbcId=" + bbcId +
+			'}';
+	}
 }

@@ -24,7 +24,7 @@ public interface BbcPointsRepository extends JpaRepository<BbcPoints, Long> {
 	public Integer getPointsFromDateEspnId(Date date, int espnId);
 
 	@Query("SELECT b FROM BbcPoints b WHERE b.date = ?1")
-	public List<BbcPoints> getPointsFromDateEspnId(Date date);
+	public List<BbcPoints> getPointsFromDate(Date date);
 
 	@Query("SELECT b FROM BbcPoints b WHERE b.year = ?1 ORDER BY espnId, date")
 	public List<BbcPoints> getSeason(int year);
@@ -34,4 +34,9 @@ public interface BbcPointsRepository extends JpaRepository<BbcPoints, Long> {
 
 	@Query("SELECT espnId FROM BbcPoints b WHERE b.date = ?1 AND espnId IN ?2 ORDER BY points DESC")
 	public List<Integer> getBestForDay(Date date, List<Integer> espnIds);
+
+	@Query("SELECT SUM(points) FROM BbcPoints b WHERE b.espnGameId = ?1")
+	public Integer getTotalPointsForEspnGameId(int espnGameId);
+
+
 }

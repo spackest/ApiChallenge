@@ -1,5 +1,7 @@
 package com.apichallenge.common.espn.bbc.entity;
 
+import com.apichallenge.common.espn.bbc.*;
+
 import javax.persistence.*;
 
 @Entity
@@ -17,14 +19,14 @@ public class BbcPosition extends ParentEntity<BbcPosition> {
 	public BbcPosition() {
 	}
 
-	public BbcPosition(int slotId, String slot, String position) {
-		this.slotId = slotId;
+	public BbcPosition(SlotId slotId, String slot, String position) {
+		this.slotId = slotId.getId();
 		this.slot = slot;
 		this.position = position;
 	}
 
-	public int getSlotId() {
-		return slotId;
+	public SlotId getSlotId() {
+		return new SlotId(slotId);
 	}
 
 	public String getSlot() {

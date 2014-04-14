@@ -1,38 +1,34 @@
 package com.apichallenge.common.espn.bbc.service;
 
 import com.apichallenge.common.espn.bbc.*;
+import com.apichallenge.common.espn.bbc.entity.*;
 import org.springframework.stereotype.*;
 
 @Service
 public class BbcPlayerDay {
 	private EspnId espnId;
 	private BbcId bbcId;
-	private long teamId;
-	private Long opponentId;
+	private boolean injured;
+	private BbcTeam team;
+	private BbcTeam opponent;
 	private boolean homeGame;
 	private float average;
 	private int points;
-	private BbcPlayerDay startingPitcher;
+	private BbcPlayer teamStartingPitcher;
+	private BbcPlayer opposingStartingPitcher;
 
 	public BbcPlayerDay() {
 	}
 
-	public BbcPlayerDay(EspnId espnId, BbcId bbcId, long teamId, Long opponentId, boolean homeGame, float average, int points) {
+	public BbcPlayerDay(EspnId espnId, BbcId bbcId, boolean injured, BbcTeam team, BbcTeam opponent, boolean homeGame, float average, int points) {
 		this.espnId = espnId;
 		this.bbcId = bbcId;
-		this.teamId = teamId;
-		this.opponentId = opponentId;
+		this.injured = injured;
+		this.team = team;
+		this.opponent = opponent;
 		this.homeGame = homeGame;
 		this.average = average;
 		this.points = points;
-	}
-
-	public BbcPlayerDay getStartingPitcher() {
-		return startingPitcher;
-	}
-
-	public void setStartingPitcher(BbcPlayerDay startingPitcher) {
-		this.startingPitcher = startingPitcher;
 	}
 
 	public EspnId getEspnId() {
@@ -43,23 +39,51 @@ public class BbcPlayerDay {
 		return bbcId;
 	}
 
-	public long getTeamId() {
-		return teamId;
-	}
-
-	public long getOpponentId() {
-		return opponentId;
-	}
-
-	public boolean isHomeGame() {
-		return homeGame;
+	public int getPoints() {
+		return points;
 	}
 
 	public float getAverage() {
 		return average;
 	}
 
-	public int getPoints() {
-		return points;
+	public boolean isHomeGame() {
+		return homeGame;
+	}
+
+	public boolean isInjured() {
+		return injured;
+	}
+
+	public BbcTeam getTeam() {
+		return team;
+	}
+
+	public Long getTeamId() {
+		return team == null ? null : team.getId();
+	}
+
+	public BbcTeam getOpponent() {
+		return opponent;
+	}
+
+	public Long getOpponentId() {
+		return opponent == null ? null : opponent.getId();
+	}
+
+	public BbcPlayer getTeamStartingPitcher() {
+		return teamStartingPitcher;
+	}
+
+	public BbcPlayer getOpposingStartingPitcher() {
+		return opposingStartingPitcher;
+	}
+
+	public void setTeamStartingPitcher(BbcPlayer teamStartingPitcher) {
+		this.teamStartingPitcher = teamStartingPitcher;
+	}
+
+	public void setOpposingStartingPitcher(BbcPlayer opposingStartingPitcher) {
+		this.opposingStartingPitcher = opposingStartingPitcher;
 	}
 }

@@ -28,10 +28,11 @@ public class BbcSlurp {
 	private static final Pattern EXTRA_BOX_PATTERN = Pattern.compile("<strong>(2B|3B|HR|SB):</strong>(.*?)<", Pattern.DOTALL);
 	private static final Pattern CHUNK_BOX_PATTERN = Pattern.compile("([^(]+)\\s+(\\d+\\s*)\\(");
 	private static final Pattern WIN_PATTERN = Pattern.compile("\\(W,\\s*\\d+-\\d+\\)");
+	private static final Pattern SCHEDULE_PITCHER_PATTERN = Pattern.compile("/id/(\\d+)/");
 
 	private static final Log LOG = LogFactory.getLog(BbcSlurp.class);
 
-	private static final int PITCHING_SLOT_ID = 10;
+	private static final SlotId PITCHING_SLOT_ID = new SlotId(10);
 	private static final Map<String, Integer> EXTRA_POINTS = new HashMap<String, Integer>();
 
 	static {
@@ -138,119 +139,167 @@ public class BbcSlurp {
 		return String.format("http://espn.go.com/mlb/team/schedule/_/name/%s/year/%d/seasontype/2/half/%d/", teamScheduleName, year, half);
 	}
 
+	private Date getGameDateFromSchedule(int year, String row) {
+		Date date = null;
+
+		Matcher matcher = MONTH_DAY_PATTERN.matcher(row);
+		if (matcher.find()) {
+			int month = MONTHS.get(matcher.group(1));
+			int day = Integer.valueOf(matcher.group(2));
+			Calendar calendar = new GregorianCalendar(year, month, day);
+
+			date = calendar.getTime();
+		} else {
+			LOG.debug("no date");
+		}
+
+		return date;
+	}
+
+	private BbcGame getBbcGamePojo(int year, BbcTeam team, Element element) {
+		String row = element.toString();
+
+		if (row.contains("POSTPONED")) {
+			return null;
+		}
+
+		Date date = getGameDateFromSchedule(year, row);
+
+		String gameStatus = element.select("[class=game-status]").text();
+
+		BbcTeam homeTeam;
+		BbcTeam awayTeam;
+
+		BbcTeam opponentTeam = null;
+
+		Matcher matcher = SCHEDULE_NAME_PATTERN_TWO.matcher(row);
+		if (matcher.find()) {
+			String opponentName = matcher.group(1);
+			opponentTeam = bbcTeamRepository.findByShortName(opponentName);
+		}
+
+		if (opponentTeam == null) {
+			throw new IllegalArgumentException("no opponent team for '" + row + "'");
+		}
+
+		boolean homeGame;
+
+		if (gameStatus.equals("vs")) {
+			homeTeam = team;
+			awayTeam = opponentTeam;
+			homeGame = true;
+		} else if (gameStatus.equals("@")) {
+			homeTeam = opponentTeam;
+			awayTeam = team;
+			homeGame = false;
+		} else {
+			throw new IllegalArgumentException("no game status for '" + row + "'");
+		}
+
+		String gameExistsKey = date.toString() + "." + homeTeam.getId() + "." + awayTeam.getId();
+
+		EspnId teamStartingPitcherId = null;
+		EspnId opponentStartingPitcherId = null;
+
+		EspnId homeStartingPitcherEspnId = null;
+		EspnId awayStartingPitcherEspnId = null;
+
+		matcher = SCHEDULE_PITCHER_PATTERN.matcher(element.toString());
+		if (matcher.find()) {
+			teamStartingPitcherId = new EspnId(Integer.valueOf(matcher.group(1)));
+		}
+		if (matcher.find()) {
+			opponentStartingPitcherId = new EspnId(Integer.valueOf(matcher.group(1)));
+		}
+
+		if (teamStartingPitcherId != null && opponentStartingPitcherId != null) {
+			if (homeGame) {
+				homeStartingPitcherEspnId = teamStartingPitcherId;
+				awayStartingPitcherEspnId = opponentStartingPitcherId;
+			} else {
+				homeStartingPitcherEspnId = opponentStartingPitcherId;
+				awayStartingPitcherEspnId = teamStartingPitcherId;
+			}
+		}
+
+		EspnGameId espnGameId = null;
+
+		matcher = ESPN_GAME_ID_PATTERN.matcher(element.select("[class=score]").toString());
+		if (matcher.find()) {
+			espnGameId = new EspnGameId(Integer.valueOf(matcher.group(1)));
+		}
+
+		int gameNumber = bbcGameService.getGameNumber(date, espnGameId, homeTeam, awayTeam);
+
+		return new BbcGame(date, espnGameId, homeTeam, awayTeam, homeStartingPitcherEspnId, awayStartingPitcherEspnId, gameNumber);
+	}
+
 	public void slurpSchedule(int year) {
 		List<BbcTeam> teams = bbcTeamRepository.findAll();
+
+		int totalNewBbcGames = 0;
 
 		for (BbcTeam team : teams) {
 			int newBbcGames = 0;
 			int totalBbcGames = 0;
 
-			Set<String> gameExists = new HashSet<String>();
-
 			for (int half : Arrays.asList(1, 2)) {
 				String url = getScheduleUrl(year, half, team.getScheduleName());
-				String html = SimpleHttpCache.getHtmlFromUrl(url, year == Constants.YEAR);
+
+				boolean fresh = false;
+
+				if (Constants.YEAR == year) {
+					int currentHalf = DateUtil.getNow().before(Constants.SEASON_MID_POINT) ? 1 : 2;
+
+					if (half != currentHalf) {
+						fresh = false;
+					} else {
+						if (DateUtil.getCurrentHour() == 0) {
+							//fresh = true;
+							fresh = false;
+						}
+					}
+				}
+
+				String html = SimpleHttpCache.getHtmlFromUrl(url, fresh);
 
 				Document document = Jsoup.parse(html);
 
 				for (Element element : document.select("[class*=row team]")) {
-					String row = element.toString();
-
-					if (row.contains("POSTPONED")) {
+					BbcGame bbcGame = getBbcGamePojo(year, team, element);
+					if (bbcGame == null) {
 						continue;
 					}
 
-					Date date = null;
+					bbcGameService.sync(bbcGame);
 
-					Matcher matcher = MONTH_DAY_PATTERN.matcher(row);
-					if (matcher.find()) {
-						int month = MONTHS.get(matcher.group(1));
-						int day = Integer.valueOf(matcher.group(2));
-						Calendar calendar = new GregorianCalendar(year, month, day);
-
-						date = calendar.getTime();
-					} else {
-						LOG.debug("no date");
+					if (bbcGame.getEspnGameId() != null) {
+						handleEspnGameId(bbcGame);
 					}
-
-					String gameStatus = element.select("[class=game-status]").text();
-
-					BbcTeam homeTeam;
-					BbcTeam awayTeam;
-
-					BbcTeam opponentTeam = null;
-
-					matcher = SCHEDULE_NAME_PATTERN_TWO.matcher(row);
-					if (matcher.find()) {
-						String opponentName = matcher.group(1);
-						opponentTeam = bbcTeamRepository.findByShortName(opponentName);
-					}
-
-					if (opponentTeam == null) {
-						throw new IllegalArgumentException("no opponent team for '" + row + "'");
-					}
-
-					if (gameStatus.equals("vs")) {
-						homeTeam = team;
-						awayTeam = opponentTeam;
-					} else if (gameStatus.equals("@")) {
-						homeTeam = opponentTeam;
-						awayTeam = team;
-					} else {
-						throw new IllegalArgumentException("no game status for '" + row + "'");
-					}
-
-					String gameExistsKey = date.toString() + "." + homeTeam.getId() + "." + awayTeam.getId();
-
-					int gameNumber = gameExists.contains(gameExistsKey) ? 2 : 1;
-					if (!bbcGameService.gameExists(date, homeTeam, awayTeam, gameNumber)) {
-						BbcGame bbcGame = new BbcGame(date, homeTeam, awayTeam, gameNumber);
-						bbcGameRepository.save(bbcGame);
-					}
-					gameExists.add(gameExistsKey);
-
-
-					Integer espnGameId = null;
-
-					matcher = ESPN_GAME_ID_PATTERN.matcher(element.select("[class=score]").toString());
-					if (matcher.find()) {
-						espnGameId = Integer.valueOf(matcher.group(1));
-						if (bbcGameService.gameExists(espnGameId)) {
-							continue;
-						}
-
-						BbcGame bbcGame = bbcGameRepository.getBbcGame(date, homeTeam.getId(), awayTeam.getId(), gameNumber);
-						bbcGame.setEspnGameId(espnGameId);
-
-						bbcGame = handleEspnGameId(bbcGame);
-
-						if (bbcGame != null) {
-							bbcGameRepository.save(bbcGame);
-						}
-
-						newBbcGames++;
-					}
-					totalBbcGames++;
 				}
 			}
 
-
 			LOG.info(team.getName() + " had " + newBbcGames + " new games, " + totalBbcGames + " total games");
+		}
+
+		if (totalNewBbcGames > 0) {
+			handleIncomingPoints(year);
 		}
 	}
 
 	public void handleIncomingPoints(int year) {
-		Integer lastEspnId = null;
+		EspnId lastEspnId = null;
 		int incomingPoints = 0;
 		int incomingGames = 0;
 
 		for (BbcPoints bbcPoints : bbcPointsRepository.getSeason(year)) {
-			int espnId = bbcPoints.getEspnId();
+			EspnId espnId = bbcPoints.getEspnId();
 
-			if (lastEspnId == null || espnId != lastEspnId) {
+			if (lastEspnId == null || !espnId.equals(lastEspnId)) {
 				incomingPoints = 0;
 				incomingGames = 0;
 				lastEspnId = espnId;
+				System.out.println("incoming points for " + espnId);
 			}
 
 			bbcPoints.setIncomingGames(incomingGames);
@@ -269,7 +318,7 @@ public class BbcSlurp {
 
 	}
 
-	private void handleBoxScoreElement(Map<EspnId, Integer> playerPoints, Map<String, EspnId> playerNameMap, Map<EspnId, BbcTeam> playerTeam, Set<String> pitchers, Map<BbcTeam, Integer> pitchingPoints, Map<BbcTeam, EspnId> startingPitchers, Element boxScoreElement) {
+	private void handleBoxScoreElement(Map<EspnId, Integer> playerPoints, Map<EspnId, SlotId> playerSlot, Map<String, EspnId> playerNameMap, Map<EspnId, BbcTeam> playerTeam, Set<String> pitchers, Map<BbcTeam, Integer> pitchingPoints, Map<BbcTeam, EspnId> startingPitchers, Element boxScoreElement) {
 		boolean hitters = boxScoreElement.toString().contains("Hitters");
 
 		String teamName = boxScoreElement.select("[class=team-color-strip]").get(0).text();
@@ -319,6 +368,12 @@ public class BbcSlurp {
 				Integer walks = Integer.valueOf(matcher.group(8));
 				int points = runs + hits + rbis + walks;
 				playerPoints.put(espnId, points);
+				SlotId slotId = BbcPositionEnum.getBbcPositionBySlotShortName(slot).getSlotId();
+
+				if (slotId != null) {
+					playerSlot.put(espnId, slotId);
+				}
+
 				playerNameMap.put(lcName, espnId);
 			} else {
 				//The following points will be awarded/deducted for each instance one of them take place: 1 out = +1 (complete IP = +3), ER = -3, Hit = -1, BB = -1, K = +1, Win = +5.
@@ -399,22 +454,21 @@ public class BbcSlurp {
 
 	}
 
-	private BbcGame handleEspnGameId(BbcGame bbcGame) {
-		int espnGameId = bbcGame.getEspnGameId();
+	private void handleEspnGameId(BbcGame bbcGame) {
+		EspnGameId espnGameId = bbcGame.getEspnGameId();
 
 		Date date = bbcGame.getDate();
 
 		System.out.println("starting " + espnGameId);
 
-		if (bbcGameService.gameExists(espnGameId)) {
+		if (bbcGameService.gameComplete(espnGameId)) {
 			LOG.info("already complete " + espnGameId);
-
-			return null;
+			return;
 		}
 
-		bbcPointsRepository.clearOutEspnGameId(espnGameId);
+		bbcPointsRepository.clearOutEspnGameId(espnGameId.getId());
 
-		String url = "http://espn.go.com/mlb/boxscore?gameId=" + espnGameId;
+		String url = "http://espn.go.com/mlb/boxscore?gameId=" + espnGameId.getId();
 
 		String html = SimpleHttpCache.getHtmlFromUrl(url);
 
@@ -424,10 +478,11 @@ public class BbcSlurp {
 		if (gameFinalElements.size() == 0) {
 			LOG.info("game with id " + espnGameId + " doesn't appear to be final");
 			SimpleHttpCache.wipeCache(url);
-			return null;
+			return;
 		}
 
 		Map<EspnId, Integer> playerPoints = new HashMap<EspnId, Integer>();
+		Map<EspnId, SlotId> playerSlot = new HashMap<EspnId, SlotId>();
 		Map<String, EspnId> playerNameMap = new HashMap<String, EspnId>();
 		Map<EspnId, BbcTeam> playerTeam = new HashMap<EspnId, BbcTeam>();
 		Set<String> pitchers = new HashSet<String>();
@@ -436,7 +491,7 @@ public class BbcSlurp {
 		Map<BbcTeam, Integer> pitchingPoints = new HashMap<BbcTeam, Integer>();
 
 		for (Element boxScoreElement : document.select("[class$=mlb-box]")) {
-			handleBoxScoreElement(playerPoints, playerNameMap, playerTeam, pitchers, pitchingPoints, startingPitchers, boxScoreElement);
+			handleBoxScoreElement(playerPoints, playerSlot, playerNameMap, playerTeam, pitchers, pitchingPoints, startingPitchers, boxScoreElement);
 		}
 
 		handleExtraBox(playerPoints, playerNameMap, pitchers, html);
@@ -444,6 +499,8 @@ public class BbcSlurp {
 		Map<Long, Long> teamIds = new HashMap<Long, Long>();
 		teamIds.put(bbcGame.getHomeTeamId(), bbcGame.getAwayTeamId());
 		teamIds.put(bbcGame.getAwayTeamId(), bbcGame.getHomeTeamId());
+
+		List<BbcPoints> bbcPointses = new ArrayList<BbcPoints>();
 
 		for (Map.Entry<EspnId, Integer> entry : playerPoints.entrySet()) {
 			EspnId espnId = entry.getKey();
@@ -454,8 +511,17 @@ public class BbcSlurp {
 
 			Boolean homeGame = teamId == bbcGame.getHomeTeamId();
 
-			BbcPoints bbcPoints = new BbcPoints(date, espnGameId, teamId, opponentId, homeGame, espnId, points);
-			bbcPointsRepository.save(bbcPoints);
+			SlotId slotId = playerSlot.get(espnId);
+			if (slotId == null || slotId.equals(0)) {
+				BbcPlayer bbcPlayer = bbcPlayerRepository.getBbcPlayerByEspnId(espnId.getId());
+				if (bbcPlayer != null) {
+					slotId = bbcPlayer.getSlotId();
+				}
+			}
+
+
+			BbcPoints bbcPoints = new BbcPoints(date, espnGameId, teamId, opponentId, homeGame, espnId, slotId, points);
+			bbcPointses.add(bbcPoints);
 		}
 
 		for (Map.Entry<BbcTeam, EspnId> entry : startingPitchers.entrySet()) {
@@ -467,36 +533,12 @@ public class BbcSlurp {
 
 			Boolean homeGame = teamId == bbcGame.getHomeTeamId();
 
-			if (bbcTeam.getId() == bbcGame.getHomeTeamId()) {
-				bbcGame.setHomeStartingPitcherEspnId(espnId.getId());
-			} else {
-				bbcGame.setAwayStartingPitcherEspnId(espnId.getId());
-			}
-
-			BbcPoints bbcPoints = new BbcPoints(date, espnGameId, teamId, opponentId, homeGame, espnId, pitchingPoints.get(bbcTeam));
-			bbcPointsRepository.save(bbcPoints);
+			BbcPoints bbcPoints = new BbcPoints(date, espnGameId, teamId, opponentId, homeGame, espnId, PITCHING_SLOT_ID, pitchingPoints.get(bbcTeam));
+			bbcPointses.add(bbcPoints);
 		}
 
-		return bbcGame;
-	}
-
-	public BbcTeamRepository getBbcTeamRepository() {
-		return bbcTeamRepository;
-	}
-
-	public BbcPlayerRepository getBbcPlayerRepository() {
-		return bbcPlayerRepository;
-	}
-
-	public BbcPointsRepository getBbcPointsRepository() {
-		return bbcPointsRepository;
-	}
-
-	public BbcGameRepository getBbcGameRepository() {
-		return bbcGameRepository;
-	}
-
-	public EntityManagerFactory getEntityManagerFactory() {
-		return entityManagerFactory;
+		if (bbcPointses.size() > 0) {
+			bbcPointsRepository.save(bbcPointses);
+		}
 	}
 }

@@ -1,5 +1,6 @@
 package com.apichallenge.common.espn.bbc.enums;
 
+import com.apichallenge.common.espn.bbc.*;
 import com.apichallenge.common.espn.bbc.entity.*;
 
 import java.util.*;
@@ -19,7 +20,7 @@ public enum BbcPositionEnum {
 	PINCH_HITTER(0, "PH", "Pinch Hitter"),
 	PINCH_RUNNER(0, "PR", "Pinch Runner");
 
-	private static Map<Integer, BbcPositionEnum> POSITION_BY_SLOT_ID = new HashMap<Integer, BbcPositionEnum>();
+	private static Map<SlotId, BbcPositionEnum> POSITION_BY_SLOT_ID = new HashMap<SlotId, BbcPositionEnum>();
 	private static Map<String, BbcPositionEnum> POSITION_BY_SHORT_NAME = new HashMap<String, BbcPositionEnum>();
 	private BbcPosition bbcPosition;
 
@@ -34,7 +35,7 @@ public enum BbcPositionEnum {
 		}
 	}
 
-	public static BbcPositionEnum getBbcPositionBySlotId(int slotId) {
+	public static BbcPositionEnum getBbcPositionBySlotId(SlotId slotId) {
 		BbcPositionEnum bbcPositionEnum = POSITION_BY_SLOT_ID.get(slotId);
 
 		if (bbcPositionEnum == null) {
@@ -55,14 +56,18 @@ public enum BbcPositionEnum {
 	}
 
 	private BbcPositionEnum(int slotId, String slot, String bbcPosition) {
-		this.bbcPosition = new BbcPosition(slotId, slot, bbcPosition);
+		this.bbcPosition = new BbcPosition(new SlotId(slotId), slot, bbcPosition);
 	}
 
-	public int getSlotId() {
+	public SlotId getSlotId() {
 		return bbcPosition.getSlotId();
 	}
 
 	public String getShortName() {
 		return bbcPosition.getSlot();
+	}
+
+	public String getName() {
+		return bbcPosition.getPosition();
 	}
 }

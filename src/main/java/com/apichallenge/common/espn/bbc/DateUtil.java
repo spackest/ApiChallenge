@@ -17,9 +17,18 @@ public class DateUtil {
 			calendar.add(calendar.DAY_OF_MONTH, 1);
 		}
 
+		calendar.set(Calendar.HOUR, 0);
+		calendar.set(Calendar.MINUTE, 0);
+		calendar.set(Calendar.SECOND, 0);
+
 		tomorrow = calendar.getTime();
 
 		return tomorrow;
+	}
+
+	public static int getCurrentHour() {
+		GregorianCalendar calendar = new GregorianCalendar();
+		return calendar.get(Calendar.HOUR_OF_DAY);
 	}
 
 	public static int getYear(Date date) {

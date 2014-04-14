@@ -11,6 +11,8 @@ public interface BbcPlayerRepository extends JpaRepository<BbcPlayer, Long> {
 
 	BbcPlayer getBbcPlayerByEspnId(int espnId);
 
+	BbcPlayer getBbcPlayerByBbcId(int bbcId);
+
 	@Query("SELECT b.slotId FROM BbcPlayer b WHERE b.espnId = ?1")
 	Integer getSlotIdByEspnId(int espnId);
 }

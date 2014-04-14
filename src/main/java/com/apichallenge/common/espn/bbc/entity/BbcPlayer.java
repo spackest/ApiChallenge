@@ -25,10 +25,10 @@ public class BbcPlayer extends ParentEntity<BbcPlayer> {
 	public BbcPlayer() {
 	}
 
-	public BbcPlayer(BbcId bbcId, EspnId espnId, Integer slotId, long teamId, String name) {
+	public BbcPlayer(BbcId bbcId, EspnId espnId, SlotId slotId, long teamId, String name) {
 		this.bbcId = (bbcId == null) ? null : bbcId.getId();
 		this.espnId = espnId.getId();
-		this.slotId = slotId;
+		this.slotId = slotId.getId();
 		this.teamId = teamId;
 		this.name = name;
 	}
@@ -38,19 +38,19 @@ public class BbcPlayer extends ParentEntity<BbcPlayer> {
 	}
 
 	public BbcId getBbcId() {
-		return new BbcId(bbcId);
+		return bbcId == null ? null : new BbcId(bbcId);
 	}
 
 	public EspnId getEspnId() {
 		return new EspnId(espnId);
 	}
 
-	public void setSlotId(Integer slotId) {
-		this.slotId = slotId;
+	public void setSlotId(SlotId slotId) {
+		this.slotId = slotId == null ? null : slotId.getId();
 	}
 
-	public Integer getSlotId() {
-		return slotId;
+	public SlotId getSlotId() {
+		return slotId == null ? null : new SlotId(slotId);
 	}
 
 	public long getTeamId() {

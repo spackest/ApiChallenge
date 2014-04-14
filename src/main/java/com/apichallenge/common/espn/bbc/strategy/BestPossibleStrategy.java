@@ -24,8 +24,8 @@ public class BestPossibleStrategy implements Strategy {
 		for (LeagueSlot leagueSlot : bbcLeague.getLeague()) {
 			List<Integer> espnIds = new ArrayList<Integer>();
 
-			for (BbcPlayerDay bbcPlayerDay : leagueSlot.getBbcPlayerDays()) {
-				espnIds.add(bbcPlayerDay.getEspnId().getId());
+			for (Map.Entry<BbcPlayerDay, List<BbcGame>> entry : leagueSlot.getBbcPlayerGames().entrySet()) {
+				espnIds.add(entry.getKey().getEspnId().getId());
 			}
 
 			// TODO limit 1

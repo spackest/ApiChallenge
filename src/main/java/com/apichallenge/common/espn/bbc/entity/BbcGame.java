@@ -1,5 +1,7 @@
 package com.apichallenge.common.espn.bbc.entity;
 
+import com.apichallenge.common.espn.bbc.*;
+
 import javax.persistence.*;
 import java.util.*;
 
@@ -33,23 +35,27 @@ public class BbcGame extends ParentEntity<BbcGame> {
 	public BbcGame() {
 	}
 
-	public BbcGame(Date date, BbcTeam homeTeam, BbcTeam awayTeam, int gameNumber) {
-		espnGameId = null;
-		this.date = date;
+	public BbcGame(BbcTeam homeTeam, BbcTeam awayTeam, Integer homeStartingPitcherEspnId, Integer awayStartingPitcherEspnId, int gameNumber) {
 		this.homeTeamId = homeTeam.getId();
 		this.awayTeamId = awayTeam.getId();
+		this.homeStartingPitcherEspnId = homeStartingPitcherEspnId;
+		this.awayStartingPitcherEspnId = awayStartingPitcherEspnId;
 		this.gameNumber = gameNumber;
-		Calendar calendar = Calendar.getInstance();
-		calendar.setTime(date);
-		year = calendar.get(Calendar.YEAR);
 	}
 
-	public void setEspnGameId(Integer espnGameId) {
-		this.espnGameId = espnGameId;
+	public BbcGame(Date date, EspnGameId espnGameId, BbcTeam homeTeam, BbcTeam awayTeam, EspnId homeStartingPitcherEspnId, EspnId awayStartingPitcherEspnId, int gameNumber) {
+		year = DateUtil.getYear(date);
+		this.date = date;
+		this.espnGameId = espnGameId == null ? null : espnGameId.getId();
+		this.homeTeamId = homeTeam.getId();
+		this.awayTeamId = awayTeam.getId();
+		this.homeStartingPitcherEspnId = homeStartingPitcherEspnId == null ? null : homeStartingPitcherEspnId.getId();
+		this.awayStartingPitcherEspnId = awayStartingPitcherEspnId == null ? null : awayStartingPitcherEspnId.getId();
+		this.gameNumber = gameNumber;
 	}
 
-	public Integer getEspnGameId() {
-		return espnGameId;
+	public EspnGameId getEspnGameId() {
+		return espnGameId == null ? null : new EspnGameId(espnGameId);
 	}
 
 	public Date getDate() {
@@ -57,8 +63,6 @@ public class BbcGame extends ParentEntity<BbcGame> {
 	}
 
 	public long getHomeTeamId() {
-
-
 		return homeTeamId;
 	}
 
@@ -66,11 +70,47 @@ public class BbcGame extends ParentEntity<BbcGame> {
 		return awayTeamId;
 	}
 
+	public int getGameNumber() {
+		return gameNumber;
+	}
+
+	public void setEspnGameId(EspnGameId espnGameId) {
+		this.espnGameId = espnGameId == null ? null : espnGameId.getId();
+	}
+
+	public void setDate(Date date) {
+		this.date = date;
+	}
+
+	public void setYear(int year) {
+		this.year = year;
+	}
+
+	public void setHomeTeamId(long homeTeamId) {
+		this.homeTeamId = homeTeamId;
+	}
+
 	public void setHomeStartingPitcherEspnId(Integer homeStartingPitcherEspnId) {
 		this.homeStartingPitcherEspnId = homeStartingPitcherEspnId;
 	}
 
+	public void setAwayTeamId(long awayTeamId) {
+		this.awayTeamId = awayTeamId;
+	}
+
 	public void setAwayStartingPitcherEspnId(Integer awayStartingPitcherEspnId) {
 		this.awayStartingPitcherEspnId = awayStartingPitcherEspnId;
+	}
+
+	public void setGameNumber(int gameNumber) {
+		this.gameNumber = gameNumber;
+	}
+
+	public Integer getHomeStartingPitcherEspnId() {
+		return homeStartingPitcherEspnId;
+	}
+
+	public Integer getAwayStartingPitcherEspnId() {
+		return awayStartingPitcherEspnId;
 	}
 }

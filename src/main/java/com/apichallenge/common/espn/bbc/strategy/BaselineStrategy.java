@@ -21,11 +21,21 @@ public class BaselineStrategy implements Strategy {
 			EspnId espnId = null;
 
 			int maxPoints = 0;
-			for (BbcPlayerDay bbcPlayerDay : leagueSlot.getBbcPlayerDays()) {
+			for (Map.Entry<BbcPlayerDay, List<BbcGame>> entry : leagueSlot.getBbcPlayerGames().entrySet()) {
+				BbcPlayerDay bbcPlayerDay = entry.getKey();
+
+				if (bbcPlayerDay.getEspnId() == null) {
+					bbcPlayerDay.toString();
+				}
+
 				if (bbcPlayerDay.getPoints() >= maxPoints) {
 					espnId = bbcPlayerDay.getEspnId();
 					maxPoints = bbcPlayerDay.getPoints();
 				}
+			}
+
+			if (espnId == null) {
+				throw new IllegalStateException("no starter for " + leagueSlot.getPosition().getShortName());
 			}
 
 			BbcPlayer bbcPlayer = bbcPlayerRepository.getBbcPlayerByEspnId(espnId.getId());

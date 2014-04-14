@@ -27,7 +27,7 @@ public abstract class FantasyGame {
 	}
 
 	public void tradeForDate(Date date) throws Exception {
-		BbcLeague bbcLeague = getLeague(date, false);
+		BbcLeague bbcLeague = getLeague(date);
 
 		Starters expectedStarters = fantasyTeam.getStrategy().pickStarters(date, bbcLeague);
 		Starters actualStarters = tradeForStarters(expectedStarters);
@@ -57,7 +57,7 @@ public abstract class FantasyGame {
 		return points;
 	}
 
-	public abstract BbcLeague getLeague(Date date, boolean getFullLeague) throws IOException;
+	public abstract BbcLeague getLeague(Date date) throws IOException;
 
 	public abstract Starters tradeForStarters(Starters starters) throws IOException;
 }

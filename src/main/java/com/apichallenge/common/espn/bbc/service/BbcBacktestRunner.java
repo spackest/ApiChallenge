@@ -60,7 +60,7 @@ public class BbcBacktestRunner {
 		int total_points = 0;
 		for (Date date : bbcGameRepository.getDistinctCompletedDates(bbcBacktest.getYear())) {
 			System.out.println("start for " + date);
-			BbcLeague bbcLeague = fantasyGame.getLeague(date, true);
+			BbcLeague bbcLeague = fantasyGame.getLeague(date);
 			Strategy strategy = fantasyTeam.getStrategy();
 			Starters starters = strategy.pickStarters(date, bbcLeague);
 			System.out.println("got starters for " + date);
