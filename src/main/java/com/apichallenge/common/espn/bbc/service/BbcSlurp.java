@@ -30,6 +30,9 @@ public class BbcSlurp {
 	private static final Pattern WIN_PATTERN = Pattern.compile("\\(W,\\s*\\d+-\\d+\\)");
 	private static final Pattern SCHEDULE_PITCHER_PATTERN = Pattern.compile("/id/(\\d+)/");
 
+	private static final Set<String> GAME_EXISTS_SET = new HashSet<String>();
+	private static final Set<EspnGameId> ESPN_GAME_ID_DONE_SET = new HashSet<EspnGameId>();
+
 	private static final Log LOG = LogFactory.getLog(BbcSlurp.class);
 
 	private static final SlotId PITCHING_SLOT_ID = new SlotId(10);
@@ -165,6 +168,17 @@ public class BbcSlurp {
 
 		Date date = getGameDateFromSchedule(year, row);
 
+		EspnGameId espnGameId = null;
+
+		Matcher matcher = ESPN_GAME_ID_PATTERN.matcher(element.select("[class=score]").toString());
+		if (matcher.find()) {
+			espnGameId = new EspnGameId(Integer.valueOf(matcher.group(1)));
+		}
+
+		if (espnGameId != null && ESPN_GAME_ID_DONE_SET.contains(espnGameId)) {
+			return null;
+		}
+
 		String gameStatus = element.select("[class=game-status]").text();
 
 		BbcTeam homeTeam;
@@ -172,7 +186,7 @@ public class BbcSlurp {
 
 		BbcTeam opponentTeam = null;
 
-		Matcher matcher = SCHEDULE_NAME_PATTERN_TWO.matcher(row);
+		matcher = SCHEDULE_NAME_PATTERN_TWO.matcher(row);
 		if (matcher.find()) {
 			String opponentName = matcher.group(1);
 			opponentTeam = bbcTeamRepository.findByShortName(opponentName);
@@ -195,8 +209,6 @@ public class BbcSlurp {
 		} else {
 			throw new IllegalArgumentException("no game status for '" + row + "'");
 		}
-
-		String gameExistsKey = date.toString() + "." + homeTeam.getId() + "." + awayTeam.getId();
 
 		EspnId teamStartingPitcherId = null;
 		EspnId opponentStartingPitcherId = null;
@@ -222,14 +234,12 @@ public class BbcSlurp {
 			}
 		}
 
-		EspnGameId espnGameId = null;
+		String gameExistsKey = date.toString() + "." + team.getShortName() + "." + homeTeam.getId() + "." + awayTeam.getId();
 
-		matcher = ESPN_GAME_ID_PATTERN.matcher(element.select("[class=score]").toString());
-		if (matcher.find()) {
-			espnGameId = new EspnGameId(Integer.valueOf(matcher.group(1)));
-		}
+		int gameNumber = GAME_EXISTS_SET.contains(gameExistsKey) ? 2 : 1;
 
-		int gameNumber = bbcGameService.getGameNumber(date, espnGameId, homeTeam, awayTeam);
+		GAME_EXISTS_SET.add(gameExistsKey);
+		ESPN_GAME_ID_DONE_SET.add(espnGameId);
 
 		return new BbcGame(date, espnGameId, homeTeam, awayTeam, homeStartingPitcherEspnId, awayStartingPitcherEspnId, gameNumber);
 	}
@@ -254,10 +264,9 @@ public class BbcSlurp {
 					if (half != currentHalf) {
 						fresh = false;
 					} else {
-						//fresh = true;
+						fresh = false;
 						if (DateUtil.getCurrentHour() == 0) {
 							fresh = true;
-							//fresh = false;
 						}
 					}
 				}

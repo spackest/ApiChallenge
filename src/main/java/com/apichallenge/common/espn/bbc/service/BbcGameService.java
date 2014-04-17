@@ -27,7 +27,6 @@ public class BbcGameService {
 
 	public void sync(BbcGame bbcGame) {
 		BbcGame dbBbcGame = bbcGameRepository.getBbcGame(bbcGame.getDate(), bbcGame.getHomeTeamId(), bbcGame.getAwayTeamId(), bbcGame.getGameNumber());
-		BbcGame origBbcGame = bbcGameRepository.getBbcGame(bbcGame.getDate(), bbcGame.getHomeTeamId(), bbcGame.getAwayTeamId(), bbcGame.getGameNumber());
 
 		if (dbBbcGame == null) {
 			bbcGameRepository.save(bbcGame);

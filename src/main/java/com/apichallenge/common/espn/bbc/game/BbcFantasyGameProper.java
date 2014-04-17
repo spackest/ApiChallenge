@@ -62,7 +62,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 	public void init(String username, String password, FantasyTeam fantasyTeam) {
 		try {
-			//bbcSlurp.slurpSchedule(Constants.YEAR);
+			bbcSlurp.slurpSchedule(Constants.YEAR);
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 			throw new IllegalArgumentException("slurp issue", e);
