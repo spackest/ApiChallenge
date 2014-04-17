@@ -45,6 +45,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 	private static final String SET_ROSTER_URL = BBC_FRONT_PAGE + "util/api/setRoster";
 
+	private static final Pattern DOUBLE_HEADER_OPP_PATTERN = Pattern.compile("^2 Gms.+\\s+(@?[A-Z]{2,})$");
 	private static final Pattern SLOT_ID_PATTERN = Pattern.compile("slotID=(\\d+)");
 	private static final Pattern SLOT_ID2_PATTERN = Pattern.compile("slot_id=.(\\d+).");
 	private static final Pattern SPID_ID_PATTERN = Pattern.compile("spid=(\\d+)");
@@ -61,7 +62,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 	public void init(String username, String password, FantasyTeam fantasyTeam) {
 		try {
-			bbcSlurp.slurpSchedule(Constants.YEAR);
+			//bbcSlurp.slurpSchedule(Constants.YEAR);
 		} catch (Exception e) {
 			LOG.error(e.getMessage(), e);
 			throw new IllegalArgumentException("slurp issue", e);
@@ -283,9 +284,9 @@ public class BbcFantasyGameProper extends FantasyGame {
 				BbcTeam homeTeam = bbcTeamRepository.findOne(homeTeamId);
 				BbcTeam awayTeam = bbcTeamRepository.findOne(awayTeamId);
 
-				BbcGame bbcGame = new BbcGame(homeTeam, awayTeam, homeStartingPitcherEspnId, awayStartingPitcherEspnId, 1);
+				List<BbcGame> bbcGames = bbcGameRepository.getBbcGames(date, homeTeamId, awayTeamId);
 
-				map.put(bbcPlayerDay, Arrays.asList(bbcGame));
+				map.put(bbcPlayerDay, bbcGames);
 			}
 
 			LeagueSlot leagueSlot = new LeagueSlot(bbcPositionEnum, map);
@@ -370,7 +371,12 @@ public class BbcFantasyGameProper extends FantasyGame {
 		BbcTeam team = null;
 
 		String teamShortName = element.select("[class=player_team]").text();
-		String opponentShortName = element.select("[class=player_opp]").text();
+		Elements opponentElements = element.select("[class^=player_opp]");
+
+		String opponentShortName = null;
+		if (opponentElements != null) {
+			opponentShortName = opponentElements.get(0).text();
+		}
 
 		if (teamShortName == null || teamShortName.length() == 0) {
 			team = bbcTeamRepository.findByName(name);
@@ -384,6 +390,11 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 		if (opponentShortName == null || opponentShortName.length() == 0 || opponentShortName.equals("--")) {
 			opponentShortName = null;
+		} else {
+			Matcher matcher = DOUBLE_HEADER_OPP_PATTERN.matcher(opponentShortName);
+			if (matcher.find()) {
+				opponentShortName = matcher.group(1);
+			}
 		}
 
 		bbcPlayerService.perhapsInsertPlayer(bbcId, espnId, slotId, team, name);

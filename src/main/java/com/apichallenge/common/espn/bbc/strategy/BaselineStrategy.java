@@ -22,15 +22,19 @@ public class BaselineStrategy implements Strategy {
 
 			int maxPoints = 0;
 			for (Map.Entry<BbcPlayerDay, List<BbcGame>> entry : leagueSlot.getBbcPlayerGames().entrySet()) {
+				List<BbcGame> bbcGames = entry.getValue();
+
 				BbcPlayerDay bbcPlayerDay = entry.getKey();
 
 				if (bbcPlayerDay.getEspnId() == null) {
 					bbcPlayerDay.toString();
 				}
 
-				if (bbcPlayerDay.getPoints() >= maxPoints) {
+				int points = entry.getKey().getPoints() * bbcGames.size();
+
+				if (points >= maxPoints) {
 					espnId = bbcPlayerDay.getEspnId();
-					maxPoints = bbcPlayerDay.getPoints();
+					maxPoints = points;
 				}
 			}
 

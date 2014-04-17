@@ -254,9 +254,10 @@ public class BbcSlurp {
 					if (half != currentHalf) {
 						fresh = false;
 					} else {
+						//fresh = true;
 						if (DateUtil.getCurrentHour() == 0) {
-							//fresh = true;
-							fresh = false;
+							fresh = true;
+							//fresh = false;
 						}
 					}
 				}
