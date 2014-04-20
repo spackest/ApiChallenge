@@ -317,12 +317,24 @@ public class BbcFantasyGameProper extends FantasyGame {
 	public Starters tradeForStarters(Starters starters) throws IOException {
 		Map<String, String> form = new HashMap<String, String>();
 		for (Map.Entry<BbcPositionEnum, BbcPlayer> entry : starters.getEntrySet()) {
-			EspnId espnId = entry.getValue().getEspnId();
+			BbcPlayer bbcPlayer = entry.getValue();
 
-			BbcPlayer bbcPlayer = bbcPlayerRepository.getBbcPlayerByEspnId(espnId.getId());
-			LOG.info(entry.getKey().getShortName() + " starting " + bbcPlayer.getName());
+			BbcId bbcId = bbcPlayer.getBbcId();
 
-			form.put("playerInSlot_" + entry.getKey().getSlotId().getId(), String.valueOf(bbcPlayer.getBbcId().getId()));
+			if (bbcId == null) {
+				if (entry.getKey().getSlotId().getId() == BbcPositionEnum.PITCHING_STAFF.getSlotId().getId()) {
+					bbcPlayer = bbcPlayerRepository.getPitchingStaff(bbcPlayer.getTeamId(), BbcPositionEnum.PITCHING_STAFF.getSlotId().getId());
+					bbcId = bbcPlayer.getBbcId();
+				}
+			}
+
+			if (bbcId == null) {
+				throw new IllegalStateException("no bbcId for " + bbcPlayer);
+			}
+
+			System.out.println(entry.getKey().getShortName() + " starting " + bbcPlayer.getName());
+
+			form.put("playerInSlot_" + entry.getKey().getSlotId().getId(), String.valueOf(bbcId.getId()));
 		}
 		form.put("entryID", String.valueOf(espnEntry.getId()));
 		form.put("redirect", BBC_FRONT_PAGE + "entry?entryID=" + espnEntry.getId());
@@ -409,7 +421,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 			bbcOpponent = bbcTeamRepository.findByShortName(opponentShortName);
 		}
 
-		if (slotId == BbcPositionEnum.PITCHING_STAFF.getSlotId()) {
+		if (slotId.getId() == BbcPositionEnum.PITCHING_STAFF.getSlotId().getId()) {
 			Matcher matcher = PLAYER_ID_PATTERN.matcher(element.toString());
 
 			if (matcher.find()) {

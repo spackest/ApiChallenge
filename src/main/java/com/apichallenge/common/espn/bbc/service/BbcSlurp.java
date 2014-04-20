@@ -245,6 +245,8 @@ public class BbcSlurp {
 	}
 
 	public void slurpSchedule(int year) {
+		GAME_EXISTS_SET.clear();
+
 		List<BbcTeam> teams = bbcTeamRepository.findAll();
 
 		int totalNewBbcGames = 0;
@@ -264,10 +266,7 @@ public class BbcSlurp {
 					if (half != currentHalf) {
 						fresh = false;
 					} else {
-						fresh = false;
-						if (DateUtil.getCurrentHour() == 0) {
-							fresh = true;
-						}
+						fresh = bbcGameRepository.getUncompletedGameCount(year, DateUtil.getGameTomorrow()) > 0;
 					}
 				}
 
@@ -469,12 +468,12 @@ public class BbcSlurp {
 
 		Date date = bbcGame.getDate();
 
-		System.out.println("starting " + espnGameId);
-
 		if (bbcGameService.gameComplete(espnGameId)) {
 			LOG.info("already complete " + espnGameId);
 			return;
 		}
+
+		System.out.println("starting " + espnGameId);
 
 		bbcPointsRepository.clearOutEspnGameId(espnGameId.getId());
 

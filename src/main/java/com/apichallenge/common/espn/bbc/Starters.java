@@ -55,7 +55,13 @@ public class Starters {
 				if (bbcPlayerA.getEspnId().getId().equals(bbcPlayerB.getEspnId().getId())) {
 					matches++;
 				} else {
-					return false;
+					if (bbcPositionEnum.getSlotId().getId() == BbcPositionEnum.PITCHING_STAFF.getSlotId().getId()) {
+						if (bbcPlayerA.getTeamId() == bbcPlayerB.getTeamId()) {
+							matches++;
+						} else {
+							return false;
+						}
+					}
 				}
 			}
 		}

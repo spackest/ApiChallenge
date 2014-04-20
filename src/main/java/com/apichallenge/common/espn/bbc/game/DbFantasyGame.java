@@ -39,10 +39,6 @@ public class DbFantasyGame extends FantasyGame {
 
 	@Override
 	public BbcLeague getLeague(Date date) {
-		long start = System.currentTimeMillis();
-
-		System.out.println("getting league for " + date);
-
 		BbcLeague bbcLeague = new BbcLeague();
 		Map<SlotId, Map<BbcPlayerDay, List<BbcGame>>> bigMap = new HashMap<SlotId, Map<BbcPlayerDay, List<BbcGame>>>();
 
@@ -85,11 +81,10 @@ public class DbFantasyGame extends FantasyGame {
 			bbcLeague.addLeagueSlot(leagueSlot);
 		}
 
-		System.out.println(" -> got league (" + (System.currentTimeMillis() - start) + " ms)");
-
 		if (bbcLeague.getLeague().size() != 10) {
 			throw new IllegalStateException("league is the wrong size");
 		}
+
 		return bbcLeague;
 	}
 

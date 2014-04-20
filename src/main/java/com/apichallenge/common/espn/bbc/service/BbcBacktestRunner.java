@@ -59,17 +59,30 @@ public class BbcBacktestRunner {
 
 		int total_points = 0;
 		for (Date date : bbcGameRepository.getDistinctCompletedDates(bbcBacktest.getYear())) {
+			long dateStart = System.currentTimeMillis();
+
 			System.out.println("start for " + date);
+
+			long start = System.currentTimeMillis();
 			BbcLeague bbcLeague = fantasyGame.getLeague(date);
+			System.out.println(" -> got league in " + (System.currentTimeMillis() - start) + " ms");
+
 			Strategy strategy = fantasyTeam.getStrategy();
+
+			start = System.currentTimeMillis();
 			Starters starters = strategy.pickStarters(date, bbcLeague);
-			System.out.println("got starters for " + date);
+			System.out.println(" -> picked starters in " + (System.currentTimeMillis() - start) + " ms");
+
+			start = System.currentTimeMillis();
 			fantasyGame.tradeForStarters(starters);
-			System.out.println("traded starters for " + date);
+			System.out.println(" -> traded starters in " + (System.currentTimeMillis() - start) + " ms");
+
+			start = System.currentTimeMillis();
 			int points = fantasyGame.getPoints(date, starters);
-			System.out.println("got points for " + date);
+			System.out.println(" -> got points in " + (System.currentTimeMillis() - start) + " ms");
+
 			total_points += points;
-			System.out.println(date + " - " + points);
+			System.out.println(" -> " + points + " points took " + (System.currentTimeMillis() - dateStart) + " ms\n");
 		}
 
 		bbcBacktest.setPoints(total_points);

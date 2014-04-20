@@ -1,6 +1,8 @@
 package com.apichallenge.common.espn.bbc.repository;
 
+import com.apichallenge.common.espn.bbc.*;
 import com.apichallenge.common.espn.bbc.entity.*;
+import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.*;
 import org.springframework.stereotype.*;
 import org.springframework.transaction.annotation.*;
@@ -38,5 +40,5 @@ public interface BbcPointsRepository extends JpaRepository<BbcPoints, Long> {
 	@Query("SELECT SUM(points) FROM BbcPoints b WHERE b.espnGameId = ?1")
 	public Integer getTotalPointsForEspnGameId(int espnGameId);
 
-
+	public Page<BbcPoints> findByEspnIdAndDateLessThan(int espnId, Date date, Pageable pageRequest);
 }

@@ -26,10 +26,6 @@ public class BaselineStrategy implements Strategy {
 
 				BbcPlayerDay bbcPlayerDay = entry.getKey();
 
-				if (bbcPlayerDay.getEspnId() == null) {
-					bbcPlayerDay.toString();
-				}
-
 				int points = entry.getKey().getPoints() * bbcGames.size();
 
 				if (points >= maxPoints) {
