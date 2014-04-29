@@ -2,6 +2,7 @@ package com.apichallenge.common.espn.bbc.game;
 
 import com.apichallenge.common.espn.bbc.*;
 import com.apichallenge.common.espn.bbc.entity.*;
+import com.apichallenge.common.espn.bbc.enums.*;
 import com.apichallenge.common.espn.bbc.repository.*;
 import org.apache.commons.logging.*;
 import org.springframework.beans.factory.annotation.*;
@@ -42,7 +43,12 @@ public abstract class FantasyGame {
 		for (BbcPlayer bbcPlayer : starters.getStarters()) {
 
 			try {
-				Integer thesePoints = bbcPointsRepository.getPointsFromDateEspnId(date, bbcPlayer.getEspnId().getId());
+				Integer thesePoints = null;
+				if (bbcPlayer.getSlotId().getId() == BbcPositionEnum.PITCHER.getSlotId().getId()) {
+					thesePoints = bbcPointsRepository.getPitchingStaffPointsFromDateTeamId(date, bbcPlayer.getTeamId(), BbcPositionEnum.PITCHER.getSlotId().getId());
+				} else {
+					thesePoints = bbcPointsRepository.getPointsFromDateEspnId(date, bbcPlayer.getEspnId().getId());
+				}
 				if (thesePoints != null) {
 					points += thesePoints;
 				} else {

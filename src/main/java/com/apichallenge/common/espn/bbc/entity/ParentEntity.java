@@ -48,7 +48,7 @@ public class ParentEntity<T> {
 		ParentEntity that = (ParentEntity) o;
 
 		if (version != that.version) return false;
-		if (!id.equals(that.id)) return false;
+		if (id != null && !id.equals(that.id)) return false;
 
 		return true;
 	}

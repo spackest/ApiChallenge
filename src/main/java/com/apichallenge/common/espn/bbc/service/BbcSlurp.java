@@ -266,7 +266,7 @@ public class BbcSlurp {
 					if (half != currentHalf) {
 						fresh = false;
 					} else {
-						fresh = bbcGameRepository.getUncompletedGameCount(year, DateUtil.getGameTomorrow()) > 0;
+						fresh = bbcGameRepository.getUncompletedGameCount(year, DateUtil.getGameTomorrow(), team.getId()) > 0;
 					}
 				}
 
@@ -327,7 +327,7 @@ public class BbcSlurp {
 
 	}
 
-	private void handleBoxScoreElement(Map<EspnId, Integer> playerPoints, Map<EspnId, SlotId> playerSlot, Map<String, EspnId> playerNameMap, Map<EspnId, BbcTeam> playerTeam, Set<String> pitchers, Map<BbcTeam, Integer> pitchingPoints, Map<BbcTeam, EspnId> startingPitchers, Element boxScoreElement) {
+	private void handleBoxScoreElement(Date date, Map<EspnId, Integer> playerPoints, Map<EspnId, SlotId> playerSlot, Map<String, EspnId> playerNameMap, Map<EspnId, BbcTeam> playerTeam, Set<String> pitchers, Map<BbcTeam, Integer> pitchingPoints, Map<BbcTeam, EspnId> startingPitchers, Element boxScoreElement) {
 		boolean hitters = boxScoreElement.toString().contains("Hitters");
 
 		String teamName = boxScoreElement.select("[class=team-color-strip]").get(0).text();
@@ -367,7 +367,7 @@ public class BbcSlurp {
 					continue;
 				}
 
-				bbcPlayerService.perhapsInsertPlayer(null, espnId, null, bbcTeam, name);
+				bbcPlayerService.perhapsInsertPlayer(DateUtil.getYear(date), null, espnId, null, bbcTeam, name);
 
 				playerTeam.put(espnId, bbcTeam);
 
@@ -393,7 +393,7 @@ public class BbcSlurp {
 					pitchers.add(name);
 
 					if (!startingPitchers.containsKey(bbcTeam)) {
-						bbcPlayerService.perhapsInsertPlayer(null, espnId, PITCHING_SLOT_ID, bbcTeam, name);
+						bbcPlayerService.perhapsInsertPlayer(DateUtil.getYear(date), null, espnId, PITCHING_SLOT_ID, bbcTeam, name);
 						startingPitchers.put(bbcTeam, espnId);
 					}
 
@@ -500,7 +500,7 @@ public class BbcSlurp {
 		Map<BbcTeam, Integer> pitchingPoints = new HashMap<BbcTeam, Integer>();
 
 		for (Element boxScoreElement : document.select("[class$=mlb-box]")) {
-			handleBoxScoreElement(playerPoints, playerSlot, playerNameMap, playerTeam, pitchers, pitchingPoints, startingPitchers, boxScoreElement);
+			handleBoxScoreElement(date, playerPoints, playerSlot, playerNameMap, playerTeam, pitchers, pitchingPoints, startingPitchers, boxScoreElement);
 		}
 
 		handleExtraBox(playerPoints, playerNameMap, pitchers, html);

@@ -65,4 +65,32 @@ public class BbcPlayer extends ParentEntity<BbcPlayer> {
 	public String toString() {
 		return name + ", slotId=" + slotId;
 	}
+
+	@Override
+	public boolean equals(Object o) {
+		if (this == o) return true;
+		if (o == null || getClass() != o.getClass()) return false;
+		if (!super.equals(o)) return false;
+
+		BbcPlayer bbcPlayer = (BbcPlayer) o;
+
+		if (teamId != bbcPlayer.teamId) return false;
+		if (bbcId != null ? !bbcId.equals(bbcPlayer.bbcId) : bbcPlayer.bbcId != null) return false;
+		if (!espnId.equals(bbcPlayer.espnId)) return false;
+		if (!name.equals(bbcPlayer.name)) return false;
+		if (slotId != null && !slotId.equals(bbcPlayer.slotId)) return false;
+
+		return true;
+	}
+
+	@Override
+	public int hashCode() {
+		int result = getId() == null ? 1 : super.hashCode();
+		result = 31 * result + (bbcId == null ? 0 : bbcId.hashCode());
+		result = 31 * result + espnId.hashCode();
+		result = 31 * result + (slotId == null ? 0 : slotId.hashCode());
+		result = 31 * result + (int) (teamId ^ (teamId >>> 32));
+		result = 31 * result + name.hashCode();
+		return result;
+	}
 }

@@ -37,6 +37,19 @@ public class BbcBacktestRunner {
 			throw new IllegalStateException("gotta populate some players first. Run your BbcMain and trade for your team first :)");
 		}
 
+		int lastYear = year - 1;
+		int gamesForLastYear = bbcGameRepository.getGameCountForYear(lastYear);
+		if (gamesForLastYear < 2300) {
+			bbcSlurp.slurpSchedule(lastYear);
+			gamesForLastYear = bbcGameRepository.getGameCountForYear(lastYear);
+		}
+
+		int completePointsCountLastYear = bbcPointsRepository.getCompletePointsGameCount(lastYear);
+		if (completePointsCountLastYear != gamesForLastYear) {
+			bbcSlurp.handleIncomingPoints(lastYear);
+		}
+
+
 		int gamesForYear = bbcGameRepository.getGameCountForYear(year);
 
 		if (gamesForYear < 2300) {

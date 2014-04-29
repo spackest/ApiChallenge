@@ -42,10 +42,12 @@ public class DbFantasyGame extends FantasyGame {
 		BbcLeague bbcLeague = new BbcLeague();
 		Map<SlotId, Map<BbcPlayerDay, List<BbcGame>>> bigMap = new HashMap<SlotId, Map<BbcPlayerDay, List<BbcGame>>>();
 
+		Set<EspnId> inLeague = new HashSet<EspnId>();
+
 		for (BbcPoints bbcPoints : bbcPointsRepository.getPointsFromDate(date)) {
 			SlotId slotId = bbcPoints.getSlotId();
 
-			if (slotId == null || slotId.getId().equals(0)) {
+			if (slotId == null || slotId.getId().equals(0) || inLeague.contains(bbcPoints.getEspnId())) {
 				continue;
 			}
 
@@ -73,6 +75,7 @@ public class DbFantasyGame extends FantasyGame {
 				awayTeamId = bbcPoints.getTeamId();
 			}
 
+			inLeague.add(bbcPlayerDay.getEspnId());
 			slotMap.put(bbcPlayerDay, bbcGameRepository.getBbcGames(date, homeTeamId, awayTeamId));
 		}
 

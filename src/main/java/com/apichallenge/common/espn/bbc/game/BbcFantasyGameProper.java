@@ -136,7 +136,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 				throw new IllegalStateException("no slotId for " + positionElement);
 			}
 
-			BbcPlayerDay bbcPlayerDay = getPlayingPlayerFromElement(slotId, positionElement);
+			BbcPlayerDay bbcPlayerDay = getPlayingPlayerFromElement(Constants.YEAR, slotId, positionElement);
 
 			if (bbcPlayerDay == null) {
 				continue;
@@ -228,7 +228,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 			}
 
 			for (Element positionElement : tableElements.select("[id^=plyr]")) {
-				BbcPlayerDay bbcPlayerDay = getPlayingPlayerFromElement(slotId, positionElement);
+				BbcPlayerDay bbcPlayerDay = getPlayingPlayerFromElement(DateUtil.getYear(date), slotId, positionElement);
 				if (bbcPlayerDay == null || bbcPlayerDay.getOpponent() == null || bbcPlayerDay.isInjured()) {
 					continue;
 				}
@@ -348,7 +348,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 		return getStarters();
 	}
 
-	private BbcPlayerDay getPlayingPlayerFromElement(SlotId slotId, Element element) {
+	private BbcPlayerDay getPlayingPlayerFromElement(int year, SlotId slotId, Element element) {
 		Elements theseElements = element.select("[class=roster-plyr ppcLink]");
 
 		BbcId bbcId = null;
@@ -409,7 +409,7 @@ public class BbcFantasyGameProper extends FantasyGame {
 			}
 		}
 
-		bbcPlayerService.perhapsInsertPlayer(bbcId, espnId, slotId, team, name);
+		bbcPlayerService.perhapsInsertPlayer(year, bbcId, espnId, slotId, team, name);
 
 		boolean homeGame = false;
 

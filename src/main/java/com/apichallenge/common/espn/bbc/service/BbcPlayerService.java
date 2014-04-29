@@ -11,7 +11,10 @@ public class BbcPlayerService {
 	@Autowired
 	BbcPlayerRepository bbcPlayerRepository;
 
-	public void perhapsInsertPlayer(BbcId bbcId, EspnId espnId, SlotId slotId, BbcTeam bbcTeam, String name) {
+	@Autowired
+	BbcPointsRepository bbcPointsRepository;
+
+	public void perhapsInsertPlayer(int year, BbcId bbcId, EspnId espnId, SlotId slotId, BbcTeam bbcTeam, String name) {
 		BbcPlayer bbcPlayer = bbcPlayerRepository.getBbcPlayerByEspnId(espnId.getId());
 		if (bbcPlayer == null) {
 			if (slotId == null) {
@@ -25,6 +28,9 @@ public class BbcPlayerService {
 
 			if (slotId != null && bbcPlayer.getSlotId() == null) {
 				bbcPlayer.setSlotId(slotId);
+				if (bbcPlayer.getEspnId() != null) {
+					bbcPointsRepository.updateSlotId(year, bbcPlayer.getEspnId().getId(), slotId.getId());
+				}
 				changed = true;
 			}
 

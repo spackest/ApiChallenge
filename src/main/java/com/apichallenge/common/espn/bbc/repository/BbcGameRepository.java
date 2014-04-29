@@ -31,6 +31,6 @@ public interface BbcGameRepository extends JpaRepository<BbcGame, Long> {
 	@Query("SELECT COUNT(b.id) FROM BbcGame b WHERE date = ?1 AND espnGameId != ?2 AND homeTeamId = ?3 AND awayTeamId = ?4 ")
 	Integer getSimilarGameCount(Date date, int espnGameId, long homeTeamId, long awayTeamId);
 
-	@Query("SELECT COUNT(g.id) FROM BbcGame g WHERE year = ?1 AND date < ?2 AND espnGameId IS NULL")
-	Integer getUncompletedGameCount(int year, Date date);
+	@Query("SELECT COUNT(g.id) FROM BbcGame g WHERE g.year = ?1 AND g.date < ?2 AND (g.awayTeamId = ?3 OR g.homeTeamId = ?3) AND g.espnGameId IS NULL")
+	Integer getUncompletedGameCount(int year, Date date, long teamId);
 }
