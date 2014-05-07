@@ -9,6 +9,7 @@ import com.apichallenge.common.espn.bbc.repository.*;
 import com.apichallenge.common.espn.bbc.service.*;
 import org.apache.commons.logging.*;
 import org.jsoup.*;
+import org.jsoup.helper.*;
 import org.jsoup.nodes.*;
 import org.jsoup.select.*;
 import org.springframework.beans.factory.annotation.*;
@@ -102,25 +103,15 @@ public class BbcFantasyGameProper extends FantasyGame {
 	public Starters getStarters() throws IOException {
 		Starters starters = new Starters();
 
-		String url = BBC_FRONT_PAGE + "entry?entryID=" + espnEntry.getId();
-		Connection.Response response = myConnection.get(url, null);
-		Document frontDocument = response.parse();
+		Integer spid = myConnection.getSpid();
 
-		String leagueUrl = null;
-
-		int count = 0;
-
-		for (Element element : frontDocument.select("[class$=available")) {
-			for (Element thisElement : element.select("[class$=ajaxify")) {
-				leagueUrl = thisElement.attr("abs:href");
-
-				if (++count > 1) {
-					leagueUrl.toString();
-				}
-			}
+		if (spid == null) {
+			throw new IllegalStateException("no spid");
 		}
 
-		response = myConnection.get(leagueUrl, null);
+		String url = BBC_FRONT_PAGE + "entry?entryID=" + espnEntry.getId() + "&spid=" + spid;
+		Connection.Response response = myConnection.get(url, null);
+
 		Document document = response.parse();
 
 		Elements playerTable = document.select("[class*=player-table]");
@@ -166,30 +157,59 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 		Document frontDocument = response.parse();
 
-		String leagueUrl = null;
-
-		int count = 0;
+		String leagueUrl = frontDocument.select("[class$=available").select("[class=sp-nav-scoring-period-link]").attr("abs:href");
 
 		for (Element element : frontDocument.select("[class$=available")) {
+			if (StringUtil.isBlank(leagueUrl)) {
+				leagueUrl = element.attr("abs:href");
+			}
+
 			for (Element thisElement : element.select("[class$=ajaxify")) {
 				leagueUrl = thisElement.attr("abs:href");
-
-				if (++count > 1) {
-					leagueUrl.toString();
-				}
 			}
 		}
+
+		if (StringUtil.isBlank(leagueUrl)) {
+			throw new IllegalStateException("null leagueUrl");
+		}
+
+		Integer spid = null;
+
+		Matcher matcher = SPID_ID_PATTERN.matcher(leagueUrl);
+		if (matcher.find()) {
+			spid = Integer.valueOf(matcher.group(1));
+		}
+
+		if (spid == null) {
+			throw new IllegalArgumentException("no spid for " + leagueUrl);
+		}
+
+		myConnection.setSpid(spid);
 
 		response = myConnection.get(leagueUrl, null);
 
 		Document leagueDocument = response.parse();
 
-		Integer spid = null;
-
 		Map<BbcPositionEnum, List<BbcPlayerDay>> positionPlayerMap = new HashMap<BbcPositionEnum, List<BbcPlayerDay>>();
 
-		for (Element leagueElement : leagueDocument.select("[id^=edit_slot]")) {
+		Elements elements = null;
+
+		if (!leagueDocument.select("[id^=playerLink]").isEmpty()) {
+			elements = leagueDocument.select("[id^=playerLink]");
+		} else if (!leagueDocument.select("[id^=edit_slot]").isEmpty()) {
+			elements = leagueDocument.select("[id^=edit_slot]");
+		}
+
+		if (elements == null) {
+			throw new IllegalStateException("no elements: " + leagueDocument);
+		}
+
+		for (Element leagueElement : elements) {
 			String url = leagueElement.attr("abs:href");
+
+			if (!url.contains("spid")) {
+				url += "&spid=" + spid;
+			}
 
 			response = myConnection.get(url, null);
 
@@ -197,28 +217,19 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 			Elements tableElements = positionDocument.select("[id^=playertablebody]");
 
-			assert (tableElements.size() == 1);
+			if (tableElements.size() != 1) {
+				throw new IllegalStateException("bad tableElements.size(): " + tableElements.size());
+			}
 
 			SlotId slotId = null;
 
-			Matcher matcher = SLOT_ID_PATTERN.matcher(url);
+			matcher = SLOT_ID_PATTERN.matcher(url);
 			if (matcher.find()) {
 				slotId = new SlotId(Integer.valueOf(matcher.group(1)));
 			}
 
 			if (slotId == null) {
 				throw new IllegalArgumentException("no slotId for " + url);
-			}
-
-			if (spid == null) {
-				matcher = SPID_ID_PATTERN.matcher(url);
-				if (matcher.find()) {
-					spid = Integer.valueOf(matcher.group(1));
-				}
-
-				if (spid == null) {
-					throw new IllegalArgumentException("no spid for " + url);
-				}
 			}
 
 			BbcPositionEnum position = BbcPositionEnum.getBbcPositionBySlotId(slotId);
@@ -237,12 +248,6 @@ public class BbcFantasyGameProper extends FantasyGame {
 			}
 
 		}
-
-		if (spid == null) {
-			throw new IllegalArgumentException("no spid, darn it");
-		}
-
-		myConnection.setSpid(spid);
 
 		Map<Long, BbcPlayer> startingPitchers = new HashMap<Long, BbcPlayer>();
 
@@ -264,8 +269,6 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 				Long homeTeamId = null;
 				Long awayTeamId = null;
-				Integer homeStartingPitcherEspnId = null;
-				Integer awayStartingPitcherEspnId = null;
 
 				bbcPlayerDay.setTeamStartingPitcher(startingPitchers.get(bbcPlayerDay.getTeamId()));
 				bbcPlayerDay.setOpposingStartingPitcher(startingPitchers.get(bbcPlayerDay.getOpponentId()));
@@ -277,12 +280,6 @@ public class BbcFantasyGameProper extends FantasyGame {
 					homeTeamId = bbcPlayerDay.getOpponentId();
 					awayTeamId = bbcPlayerDay.getTeamId();
 				}
-
-				homeStartingPitcherEspnId = startingPitchers.get(homeTeamId).getEspnId().getId();
-				awayStartingPitcherEspnId = startingPitchers.get(awayTeamId).getEspnId().getId();
-
-				BbcTeam homeTeam = bbcTeamRepository.findOne(homeTeamId);
-				BbcTeam awayTeam = bbcTeamRepository.findOne(awayTeamId);
 
 				List<BbcGame> bbcGames = bbcGameRepository.getBbcGames(date, homeTeamId, awayTeamId);
 
@@ -373,8 +370,11 @@ public class BbcFantasyGameProper extends FantasyGame {
 
 		String name = element.select("[id=pFN]").text() + " " + element.select("[id=pLN]").text();
 		name = name.trim();
-		float average = Float.valueOf(element.select("[class*=st-favg]").text());
-		int points = Integer.valueOf(element.select("[class*=st-fpts]").text());
+
+		String averageString = element.select("[class*=st-favg]").text();
+		String pointsString = element.select("[class*=st-fpts]").text();
+		float average = StringUtil.isBlank(averageString) ? 0 : Float.valueOf(averageString);
+		int points = StringUtil.isBlank(pointsString) ? 0 : Integer.valueOf(pointsString);
 
 		Elements injuryStatuses = element.select("[class=injury-status]");
 

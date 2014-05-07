@@ -7,7 +7,7 @@ import org.junit.*;
 public class RegressionHelperTest {
 	@Test
 	public void lifeCycleTest() {
-		RegressionHelper regressionHelper = new RegressionHelper();
+		RegressionHelper regressionHelper = new RegressionHelper(null);
 
 		BbcPlayer bbcPlayerOne = new BbcPlayer(new BbcId(1), new EspnId(1), new SlotId(1), 1, "Adam Abraham");
 		BbcPlayer bbcPlayerTwo = new BbcPlayer(new BbcId(2), new EspnId(2), new SlotId(1), 1, "Bubba Bubbingham");

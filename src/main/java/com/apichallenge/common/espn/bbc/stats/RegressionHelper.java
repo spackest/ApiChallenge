@@ -1,17 +1,20 @@
 package com.apichallenge.common.espn.bbc.stats;
 
 import Jama.*;
+import com.apichallenge.common.espn.bbc.*;
 import com.apichallenge.common.espn.bbc.entity.*;
 
 import java.util.*;
 
 public class RegressionHelper {
+	private LeagueSlot leagueSlot;
 	private List<DataColumn> dataColumns = new ArrayList<DataColumn>();
 	private Map<BbcPlayer, Double> todayPoints = new HashMap<BbcPlayer, Double>();
 	private Matrix todayMatrix = null;
 	private Matrix tomorrowMatrix = null;
 
-	public RegressionHelper() {
+	public RegressionHelper(LeagueSlot leagueSlot) {
+		this.leagueSlot = leagueSlot;
 	}
 
 	public void addDataColumn(DataColumn dataColumn) {
@@ -53,7 +56,8 @@ public class RegressionHelper {
 			for (int i = 0; i < playerList.size(); i++) {
 				BbcPlayer bbcPlayer = playerList.get(i);
 				double points = predictedPointsMatrix.get(i, 0);
-				predictedPoints.addPredictedPoints(bbcPlayer, points);
+				int gameCount = leagueSlot == null ? 1 : leagueSlot.getGameCount(bbcPlayer);
+				predictedPoints.addPredictedPoints(bbcPlayer, points * gameCount);
 			}
 		} catch (Exception e) {
 			System.out.println("lame predicted points because of " + e.getMessage());

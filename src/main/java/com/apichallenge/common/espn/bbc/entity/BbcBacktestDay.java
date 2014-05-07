@@ -4,10 +4,10 @@ import javax.persistence.*;
 import java.util.*;
 
 @Entity
-@Table(name = "BBC_BACKTEST_POINTS", uniqueConstraints = {@UniqueConstraint(columnNames = {"BACKTEST_ID", "GAME_DATE"})})
-public class BbcBacktestPoints extends ParentEntity<BbcBacktestPoints> {
+@Table(name = "BBC_BACKTEST_DAY", uniqueConstraints = {@UniqueConstraint(columnNames = {"BACKTEST_ID", "GAME_DATE"})})
+public class BbcBacktestDay extends ParentEntity<BbcBacktestDay> {
 	@Column(name = "BACKTEST_ID", nullable = false)
-	private int backtestId;
+	private long backtestId;
 
 	@Column(name = "GAME_DATE", nullable = false)
 	private Date gameDate;
@@ -15,7 +15,7 @@ public class BbcBacktestPoints extends ParentEntity<BbcBacktestPoints> {
 	@Column(name = "POINTS", nullable = false)
 	private int points;
 
-	public BbcBacktestPoints(int backtestId, Date gameDate, int points) {
+	public BbcBacktestDay(long backtestId, Date gameDate, int points) {
 		this.backtestId = backtestId;
 		this.gameDate = gameDate;
 		this.points = points;

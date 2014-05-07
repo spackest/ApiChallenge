@@ -12,7 +12,7 @@ public class MyConnection {
 	private Connection.Response response;
 	private Map<String, String> cookies;
 	private List<EspnEntry> espnEntries;
-	private int spid;
+	private Integer spid;
 
 	private static final Log LOG = LogFactory.getLog(MyConnection.class);
 
@@ -73,11 +73,11 @@ public class MyConnection {
 		return response;
 	}
 
-	public int getSpid() {
+	public Integer getSpid() {
 		return spid;
 	}
 
-	public void setSpid(int spid) {
+	public void setSpid(Integer spid) {
 		this.spid = spid;
 	}
 }

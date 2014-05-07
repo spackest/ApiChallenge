@@ -13,7 +13,6 @@ import org.springframework.beans.factory.annotation.*;
 import org.springframework.stereotype.*;
 
 import javax.annotation.*;
-import javax.persistence.*;
 import java.util.*;
 import java.util.regex.*;
 
@@ -37,6 +36,8 @@ public class BbcSlurp {
 
 	private static final SlotId PITCHING_SLOT_ID = new SlotId(10);
 	private static final Map<String, Integer> EXTRA_POINTS = new HashMap<String, Integer>();
+
+	private static final Set<String> RETRIEVED_SCHEDULE_URLS = new HashSet<String>();
 
 	static {
 		EXTRA_POINTS.put("2B", 1);
@@ -64,9 +65,6 @@ public class BbcSlurp {
 
 	@Autowired
 	private BbcPlayerService bbcPlayerService;
-
-	@Autowired
-	private EntityManagerFactory entityManagerFactory;
 
 	@PostConstruct
 	private void init() {
@@ -270,7 +268,13 @@ public class BbcSlurp {
 					}
 				}
 
+				// this is for when you trade more than one team
+				if (RETRIEVED_SCHEDULE_URLS.contains(url)) {
+					fresh = false;
+				}
+
 				String html = SimpleHttpCache.getHtmlFromUrl(url, fresh);
+				RETRIEVED_SCHEDULE_URLS.add(url);
 
 				Document document = Jsoup.parse(html);
 
@@ -290,41 +294,6 @@ public class BbcSlurp {
 
 			LOG.info(team.getName() + " had " + newBbcGames + " new games, " + totalBbcGames + " total games");
 		}
-
-		if (totalNewBbcGames > 0) {
-			handleIncomingPoints(year);
-		}
-	}
-
-	public void handleIncomingPoints(int year) {
-		EspnId lastEspnId = null;
-		int incomingPoints = 0;
-		int incomingGames = 0;
-
-		for (BbcPoints bbcPoints : bbcPointsRepository.getSeason(year)) {
-			EspnId espnId = bbcPoints.getEspnId();
-
-			if (lastEspnId == null || !espnId.equals(lastEspnId)) {
-				incomingPoints = 0;
-				incomingGames = 0;
-				lastEspnId = espnId;
-				System.out.println("incoming points for " + espnId);
-			}
-
-			bbcPoints.setIncomingGames(incomingGames);
-
-			int points = bbcPoints.getPoints();
-			bbcPoints.setIncomingTotalPoints(incomingPoints);
-
-			float average = (incomingGames == 0) ? 0 : ((float) incomingPoints / incomingGames);
-			bbcPoints.setIncomingAveragePoints(average);
-			bbcPointsRepository.save(bbcPoints);
-
-			incomingGames++;
-			incomingPoints += points;
-		}
-
-
 	}
 
 	private void handleBoxScoreElement(Date date, Map<EspnId, Integer> playerPoints, Map<EspnId, SlotId> playerSlot, Map<String, EspnId> playerNameMap, Map<EspnId, BbcTeam> playerTeam, Set<String> pitchers, Map<BbcTeam, Integer> pitchingPoints, Map<BbcTeam, EspnId> startingPitchers, Element boxScoreElement) {

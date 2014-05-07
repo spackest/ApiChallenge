@@ -32,20 +32,12 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 	@Column(name = "HOME_GAME", nullable = false)
 	private boolean homeGame;
 
+	@Index(name = "BBC_POINTS_ESPN_ID_DATE", columnNames = {"ESPN_ID", "DATE"})
 	@Column(name = "ESPN_ID", nullable = false)
 	private int espnId;
 
 	@Column(name = "SLOT_ID", nullable = true)
 	private Integer slotId;
-
-	@Column(name = "INCOMING_GAMES", nullable = true)
-	private Integer incomingGames;
-
-	@Column(name = "INCOMING_TOTAL_POINTS", nullable = true)
-	private Integer incomingTotalPoints;
-
-	@Column(name = "INCOMING_AVERAGE_POINTS", nullable = true)
-	private Float incomingAveragePoints;
 
 	@Column(name = "POINTS", nullable = true)
 	private Integer points;
@@ -72,20 +64,6 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 		this.espnId = espnId.getId();
 		this.slotId = slotId.getId();
 		this.points = points;
-		incomingTotalPoints = null;
-		incomingAveragePoints = null;
-	}
-
-	public void setIncomingGames(Integer incomingGames) {
-		this.incomingGames = incomingGames;
-	}
-
-	public void setIncomingTotalPoints(Integer incomingTotalPoints) {
-		this.incomingTotalPoints = incomingTotalPoints;
-	}
-
-	public void setIncomingAveragePoints(float incomingAveragePoints) {
-		this.incomingAveragePoints = incomingAveragePoints;
 	}
 
 	public Integer getPoints() {
@@ -94,14 +72,6 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 
 	public EspnId getEspnId() {
 		return new EspnId(espnId);
-	}
-
-	public Integer getIncomingTotalPoints() {
-		return incomingTotalPoints;
-	}
-
-	public Float getIncomingAveragePoints() {
-		return incomingAveragePoints;
 	}
 
 	public long getTeamId() {
@@ -130,10 +100,6 @@ public class BbcPoints extends ParentEntity<BbcPoints> {
 
 	public SlotId getSlotId() {
 		return slotId == null ? null : new SlotId(slotId);
-	}
-
-	public Integer getIncomingGames() {
-		return incomingGames;
 	}
 
 	@Override
